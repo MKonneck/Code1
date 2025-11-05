@@ -14,4 +14,16 @@
 
 #!/bin/bash
 
-read -p "Name: " project_name
+read -p "What is the name of the new file?: " project_name
+echo "Creating Main Folder..."
+mkdir -p "$project_name"
+echo "Project Created!"
+cd "$project_name"
+echo "Creating Sub-Folders..."
+mkdir -p "src"
+mkdir -p "docs"
+mkdir -p "assets"
+echo "Sub-Folders have been created!"
+
+
+chmod +x new_project.sh
