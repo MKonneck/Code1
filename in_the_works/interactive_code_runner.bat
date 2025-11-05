@@ -29,17 +29,39 @@ echo ---------------------------------------------------------------------------
 
 set /p "Choice=Enter your Choice: "
 
-set WshShell = CreateObject("WScript.Shell") > input.vbs
-if Choice = "" Then WScript.Quit >> input.vbs
-set fs = CreateObject("Scripting.FileSystemObject") >> input.vbs
-set a = fs.CreateTextFile("temp_user_choice.txt", True) >> input.vbs
-a.WriteLine Choice >> input.vbs
-a.Close >> input.vbs
+if "%Choice%"=="1" goto :StartVSCode
+if "%Choice%"=="2" goto :OpenScriptsFolder
+if "%Choice%"=="3" goto :TestConnection
+if "%Choice%"=="0" goto :ExitScript
+if "%Choice%" NEQ "1" if "%Choice%" NEQ "2" if "%Choice%" NEQ "3" if "%Choice%" NEQ "0" (
+    echo Invalid choice. Please try again.
+    pause
+    goto :MenuStart
+)
 
-cscript //nologo input.vbs
+:StartVSCode
+    echo.
+    echo Launching VS Code...
+    start "" code
+    pause
+    goto :MenuStart
 
-set /p "Choice=" < Temp_User_Choice.txt
+:OpenScriptsFolder
+    echo.
+    echo Opening Current Folder
+    start explorer .
+    pause
+    goto :MenuStart
 
-del input.vbs
+:TestConnection
+    echo.
+    echo pinging Google 4 times...
+    ping -n 4 google.com
+    pause
+    goto :MenuStart
 
-endlocal
+:ExitScript
+    echo.
+    echo Goodbye!
+    endlocal
+    exit /b
