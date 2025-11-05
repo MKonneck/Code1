@@ -24,6 +24,3 @@ mkdir -p "src"
 mkdir -p "docs"
 mkdir -p "assets"
 echo "Sub-Folders have been created!"
-
-
-chmod +x new_project.sh
