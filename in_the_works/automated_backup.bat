@@ -29,9 +29,9 @@ echo set b = fs.CreateTextFile("destination_folder_path.txt", True) >> input.vbs
 echo b.WriteLine DestinationFolder >> input.vbs
 echo b.Close >> input.vbs
 
-CALL :LogStatus "Starting Backup Process..."
-
 cscript //nologo input.vbs
+
+CALL :LogStatus "Starting Backup Process..."
 
 set /p "Source_Folder=" < source_folder_path.txt
 set /p "Destination_Folder=" < destination_folder_path.txt
@@ -39,20 +39,26 @@ set /p "Destination_Folder=" < destination_folder_path.txt
 if not defined Source_Folder goto :CleanupEnd
 if not defined Destination_Folder goto :CleanupEnd
 
-xcopy <"Source_Folder"> [<"Destination_Folder">] /y 
+xcopy "%Source_Folder%" "%Destination_Folder%" /E /y 
 
-CALL :LogStatus "Backup Complete!"
+if errorlevel 1 (
+    CALL :LogStatus "BACKUP FAILED (Check paths and permissions!)"
+) else (
+    CALL :LogStatus "Backup Complete!"
+)
 
+:CleanupEnd
 del input.vbs 2>nul
 del source_folder_path.txt 2>nul
 del destination_folder_path.txt 2>nul
+
+CALL :LogStatus "Backup Complete!"
+
+endlocal
+pause
 
 :LogStatus
     echo ------------------------------------------------
     echo STATUS: %1 (Called at %time%)
     echo ------------------------------------------------
     goto :eof
-
-:CleanupEnd
-endlocal
-pause
