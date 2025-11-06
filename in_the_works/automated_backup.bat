@@ -39,14 +39,13 @@ set /p "Destination_Folder=" < destination_folder_path.txt
 if not defined Source_Folder goto :CleanupEnd
 if not defined Destination_Folder goto :CleanupEnd
 
-del input.vbs 2>nul
-del source_folder_path.txt 2>nul
-del destination_folder_path.txt 2>nul
-
 xcopy <"Source_Folder"> [<"Destination_Folder">] /y 
 
 CALL :LogStatus "Backup Complete!"
 
+del input.vbs 2>nul
+del source_folder_path.txt 2>nul
+del destination_folder_path.txt 2>nul
 
 :LogStatus
     echo ------------------------------------------------
