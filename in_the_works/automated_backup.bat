@@ -43,7 +43,7 @@ del input.vbs 2>nul
 del source_folder_path.txt 2>nul
 del destination_folder_path.txt 2>nul
 
-xcopy <%Source_Folder%> [<%Destination_Folder%>] /y 
+xcopy <Source_Folder> [<Destination_Folder>] /y 
 
 CALL :LogStatus "Backup Complete!"
 
