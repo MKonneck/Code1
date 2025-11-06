@@ -14,3 +14,27 @@ REM
 REM -------------------------------------------------------------------------------
 
 echo off
+setlocal
+
+echo set WshShell = CreateObject("WScript.Shell") > input.vbs
+echo SourceFolder = InputBox("Enter the full file path of the source folder: ", "Automated Backup Wizard") >> input.vbs
+echo If SourceFolder = "" Then WScript.Quit >> input.vbs
+echo DestinationFolder = InputBox("Enter the full file path of the destination folder: ", "Automated Backup Wizard") >> input.vbs
+echo If DestinationFolder = "" Then WScript.Quit >> input.vbs
+echo set fs = CreateObject("Scripting.FileSystemObject") > input.vbs
+echo set a = fs.CreateTextFile("source_folder_path.txt", True) >> input.vbs
+echo a.WriteLine SourceFolder >> input.vbs
+echo set b = fs.CreateTextFile("destination_folder_path.txt", True) >> input.vbs
+echo b.WriteLine DestinationFolder >> input.vbs
+echo a.close>>
+
+set /p "Source_Folder=" < source_folder_path.txt
+set /p "Destination_Folder=" < destination_folder_path.txt
+
+
+@REM :LogStatus
+@REM     echo ------------------------------------------------
+@REM     echo STATUS: %1 (Called at %time%)
+@REM     echo ------------------------------------------------
+@REM     goto :eof
+
