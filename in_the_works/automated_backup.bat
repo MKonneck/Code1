@@ -21,7 +21,7 @@ echo SourceFolder = InputBox("Enter the full file path of the source folder: ", 
 echo If SourceFolder = "" Then WScript.Quit >> input.vbs
 echo DestinationFolder = InputBox("Enter the full file path of the destination folder: ", "Automated Backup Wizard") >> input.vbs
 echo If DestinationFolder = "" Then WScript.Quit >> input.vbs
-echo set fs = CreateObject("Scripting.FileSystemObject") > input.vbs
+echo set fs = CreateObject("Scripting.FileSystemObject") >> input.vbs
 echo set a = fs.CreateTextFile("source_folder_path.txt", True) >> input.vbs
 echo a.WriteLine SourceFolder >> input.vbs
 echo a.Close >> input.vbs
@@ -29,15 +29,31 @@ echo set b = fs.CreateTextFile("destination_folder_path.txt", True) >> input.vbs
 echo b.WriteLine DestinationFolder >> input.vbs
 echo b.Close >> input.vbs
 
+CALL :LogStatus "Starting Backup Process..."
+
 cscript //nologo input.vbs
 
 set /p "Source_Folder=" < source_folder_path.txt
 set /p "Destination_Folder=" < destination_folder_path.txt
 
+if not defined Source_Folder goto :CleanupEnd
+if not defined Destination_Folder goto :CleanupEnd
 
-@REM :LogStatus
-@REM     echo ------------------------------------------------
-@REM     echo STATUS: %1 (Called at %time%)
-@REM     echo ------------------------------------------------
-@REM     goto :eof
+del input.vbs 2>nul
+del source_folder_path.txt 2>nul
+del destination_folder_path.txt 2>nul
 
+xcopy <%Source_Folder%> [<%Destination_Folder%>] /y 
+
+CALL :LogStatus "Backup Complete!"
+
+
+:LogStatus
+    echo ------------------------------------------------
+    echo STATUS: %1 (Called at %time%)
+    echo ------------------------------------------------
+    goto :eof
+
+:CleanupEnd
+endlocal
+pause
