@@ -24,9 +24,12 @@ echo If DestinationFolder = "" Then WScript.Quit >> input.vbs
 echo set fs = CreateObject("Scripting.FileSystemObject") > input.vbs
 echo set a = fs.CreateTextFile("source_folder_path.txt", True) >> input.vbs
 echo a.WriteLine SourceFolder >> input.vbs
+echo a.Close >> input.vbs
 echo set b = fs.CreateTextFile("destination_folder_path.txt", True) >> input.vbs
 echo b.WriteLine DestinationFolder >> input.vbs
-echo a.close>>
+echo b.Close >> input.vbs
+
+cscript //nologo input.vbs
 
 set /p "Source_Folder=" < source_folder_path.txt
 set /p "Destination_Folder=" < destination_folder_path.txt
