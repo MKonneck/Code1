@@ -10,3 +10,4 @@ REM  DESCRIPTION: This script checks if a command worked correctly and uses the
 REM               for command to rename files in bulk.
 REM               
 REM -------------------------------------------------------------------------------
+
