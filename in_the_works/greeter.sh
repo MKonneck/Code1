@@ -14,3 +14,9 @@
 #
 # -------------------------------------------------------------------------------
 
+name="Matthew"
+
+echo "Hello $name! How are you doing today?"
+
+chmod +x greeter.sh
+./greeter.sh
