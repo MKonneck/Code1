@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # -------------------------------------------------------------------------------
 #
 #  PROJECT: The Interactive Code Runner
@@ -11,8 +13,6 @@
 #               and system utilities using IF and GOTO commands for control flow.
 #
 # -------------------------------------------------------------------------------
-
-#!/bin/bash
 
 read -p "What is the name of the new file?: " project_name
 echo "Creating Main Folder..."
