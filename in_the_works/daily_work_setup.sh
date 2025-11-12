@@ -17,12 +17,21 @@
 #
 #---------------------------------------------------------------------
 
+default_path="iCloud Drive/Documents/GitHub"
+
+if [ $# -gt 0 ];
+then
+    target_dir="$1"
+else
+    target_dir="$default_path"
+fi
 TODAY=$(date +"%Y-%m-%d")
 folder_name="${TODAY}_Daily_Work"
 if [ -d "$folder_name" ];
 then 
     echo "I'm sorry but this folder already exists!";
 else
-    mkdir $folder_name 
+    cd $target_dir
+    mkdir $folder_name
     echo "Congradulations your folder has been created!";
 fi 
