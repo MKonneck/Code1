@@ -19,8 +19,10 @@
 
 TODAY=$(date +"%Y-%m-%d")
 folder_name="${TODAY}_Daily_Work"
-if [-d "$folder_name"];
-then echo "I'm sorry but this folder already exists!";
-else make_folder= mkdir $folder_name 
+if [ -d "$folder_name" ];
+then 
+    echo "I'm sorry but this folder already exists!";
+else
+    mkdir $folder_name 
     echo "Congradulations your folder has been created!";
-fi
+fi 
