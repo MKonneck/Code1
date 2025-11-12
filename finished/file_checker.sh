@@ -17,7 +17,7 @@
 #
 #---------------------------------------------------------------------
 
-if [[ $# -ne 2 || $# -ne 3 ]];
+if [[ $# -ne 2 && $# -ne 3 ]];
 then
     echo "Usage: ./cleanup.sh <target_directory> <age_in_days> <dry_run>"
     exit 1
@@ -26,6 +26,14 @@ fi
 TARGET_DIR="$1"
 AGE_DAYS="$2"
 DRY_RUN="$3"
+IS_DRY_RUN="false"
+if [ "$DRY_RUN" = "-d" ]; 
+then
+    IS_DRY_RUN="true"
+    echo "--------"
+    echo "STARTING A DRY RUN"
+    echo "--------"
+fi
 
 echo "Searching for files in $TARGET_DIR that are older than $AGE_DAYS ..."
 
@@ -35,12 +43,13 @@ do
     read -p "Would you like to delete? (y/n)" REPLY
     if [[ "$REPLY" == "y" || "$REPLY" == "Y" ]];
     then 
-        if [ "$DRY_RUN" = "-d" ];
+        if [ "$IS_DRY_RUN" = "true" ];
         then
             echo "[DRY_RUN] would delete: $FILE";
         else
             echo "Okay, deleting $FILE"
             rm "$FILE";
+        fi
     else 
         echo "Okay, will not delete $FILE !"
         continue;
