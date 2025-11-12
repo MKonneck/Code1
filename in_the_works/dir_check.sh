@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#TODO:
+#   Add elements to make it use input boxes and visuals
+
 # -------------------------------------------------------------------------------
 #
 #  PROJECT: Asks the user for a file path and checks if file path exists
