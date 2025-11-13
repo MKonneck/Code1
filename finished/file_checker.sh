@@ -6,53 +6,33 @@
 #  PROJECT: File Checker
 #
 #  @AUTHOR: Matthew Konneck
-#  @VERSION: V1.0
+#  @VERSION: V2.0
 #  @DATE: 11-12-25
 #
 #  DESCRIPTION: A script that cleans up old log files 
 #               (or any files you choose) from a specific directory.
 #               
-#                            
+#  NOTES:      Changed from CLI input to display input
 #
 #
 #---------------------------------------------------------------------
 
-if [[ $# -ne 2 && $# -ne 3 ]];
-then
-    echo "Usage: ./cleanup.sh <target_directory> <age_in_days> <dry_run>"
-    exit 1
-fi
 
-TARGET_DIR="$1"
-AGE_DAYS="$2"
-DRY_RUN="$3"
-IS_DRY_RUN="false"
-if [ "$DRY_RUN" = "-d" ]; 
-then
-    IS_DRY_RUN="true"
-    echo "--------"
-    echo "STARTING A DRY RUN"
-    echo "--------"
-fi
+TARGET_DIR=$(osascript -e 'display dialog "Enter the FULL path to the directory to clean (e.g., /Users/me/Downloads)" default answer "/Users/'$USER'/Downloads"' -e 'text returned of result')
 
-echo "Searching for files in $TARGET_DIR that are older than $AGE_DAYS ..."
+AGE_DAYS=$(osascript -e 'display dialog "Delete files older than (Days):" default answer "30"' -e 'text returned of result')
+
+osascript -e "display notification \"Scanning $TARGET_DIR for files older than $AGE_DAYS days.\" with title \"Cleanup Script Running\""
 
 for FILE in $(find "$TARGET_DIR" -type f -mtime +"$AGE_DAYS"); 
-do
-    echo "Found old file: $FILE "
-    read -p "Would you like to delete? (y/n)" REPLY
-    if [[ "$REPLY" == "y" || "$REPLY" == "Y" ]];
-    then 
-        if [ "$IS_DRY_RUN" = "true" ];
-        then
-            echo "[DRY_RUN] would delete: $FILE";
-        else
-            echo "Okay, deleting $FILE"
-            rm "$FILE";
-        fi
+   do
+    RESPONSE=$(osascript -e 'display dialog "Found old file: '$FILE'\n\nWould you like to delete it?" buttons {"Yes", "No"} default button "No"' -e 'button returned of result')
+
+    if [ "$RESPONSE" = "Yes" ]; then
+        echo "--> Deleting $FILE..."
+        rm "$FILE"
     else 
-        echo "Okay, will not delete $FILE !"
-        continue;
+        echo "--> Skipping $FILE. Will not delete."
     fi
 done
 echo "---"
