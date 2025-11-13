@@ -49,3 +49,8 @@ for FILE in $(find "$TARGET_DIR" -type f -mtime +"$AGE_DAYS");
 done
 echo "---"
 echo "File cleanup success!!"
+if [ "$IS_DRY_RUN" = "true" ]; then
+    osascript -e 'display dialog "Dry Run Complete.\n\nNo files were deleted." buttons {"OK"} default button "OK"'
+else
+    osascript -e 'display dialog "File Cleanup Success!\n\nCheck your terminal for details." buttons {"OK"} default button "OK"'
+fi
