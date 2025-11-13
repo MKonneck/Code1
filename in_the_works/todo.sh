@@ -15,9 +15,9 @@
 #
 #---------------------------------------------------------------------
 
-TODO_FILE="~/github/Code1/TestFiles/ToDo_List.txt"
+TODO_FILE="/Users/mkonneck/github/Code1/TestFiles/ToDo_List.txt"
 
-CHOICE=$(osascript -e 'display dialog "What would you like to do with your To-do list?" buttons {"Add Task","View List","Clear List","Exit" default button "Exit"' -e 'button returned of result'})
+CHOICE=$(osascript -e 'display dialog "What would you like to do with your To-do list?" buttons {"Add Task", "View List", "Clear List"} default button "Add Task"' -e 'button returned of result')
 
 case "$CHOICE" in
     "Add Task")    
