@@ -15,13 +15,20 @@
 #
 #---------------------------------------------------------------------
 
-CITY_NAME="GRAND_HAVEN"
+CITY_NAME=$(osascript -e 'display dialog "Input your current City:" default answer "Holland_mi"' -e 'text returned of result')
+CITY_NAME=$(echo "$CITY_NAME" | sed 's/ /_/g')
 WEATHER_URL="wttr.in/$CITY_NAME?format=3"
 
-WEATHER_DATA=$(curl "$WEATHER_URL")
+RAW_WEATHER_DATA=$(curl -s "$WEATHER_URL")
 
-NOTIFICATION_TITLE="Current weather for $CITY_NAME"
+CLEAN_WEATHER_DATA=$(echo "$RAW_WEATHER_DATA" | tr -d '[:cntrl:]' | sed 's/"/\\"/g')
 
-osascript -e "display notification \"$WEATHER_DATA\" with title \"$NOTIFICATION_TITLE\"
+DISPLAY_CITY_NAME=$(echo "$CITY_NAME" | tr '_' ' ')
 
-echo "Weather Fetched: $WEATHER_DATA"
+NOTIFICATION_TITLE="Current Weather for $DISPLAY_CITY_NAME"
+
+APPLE_SCRIPT_COMMAND='display notification "'$CLEAN_WEATHER_DATA'" with title "'$NOTIFICATION_TITLE'"'
+
+osascript -e "$APPLE_SCRIPT_COMMAND" > /dev/null 2>&1
+
+echo "Weather Fetched: $CLEAN_WEATHER_DATA"
