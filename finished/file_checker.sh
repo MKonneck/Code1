@@ -2,7 +2,6 @@
 
 #---------------------------------------------------------------------
 #
-#
 #  PROJECT: File Checker
 #
 #  @AUTHOR: Matthew Konneck
@@ -12,15 +11,28 @@
 #  DESCRIPTION: A script that cleans up old log files 
 #               (or any files you choose) from a specific directory.
 #               
-#  NOTES:      Changed from CLI input to display input
+#  NOTES:      Changed from CLI input to display input.
 #
+#  -------------------------------------------------------------------
+#  USER CONFIGURATION BLOCK
+#
+#  @param DEFAULT_AGE_DAYS: Requires a maximum amount of days since
+#                           edited to start looking through.
+#                           
+#
+#  -------------------------------------------------------------------
 #
 #---------------------------------------------------------------------
+
+# --- CONFIGURATION VARIABLES ---
+DEFAULT_AGE_DAYS=30
+# -------------------------------
+
 
 
 TARGET_DIR=$(osascript -e 'display dialog "Enter the FULL path to the directory to clean (e.g., /Users/me/Downloads)" default answer "/Users/'$USER'/Downloads"' -e 'text returned of result')
 
-AGE_DAYS=$(osascript -e 'display dialog "Delete files older than (Days):" default answer "30"' -e 'text returned of result')
+AGE_DAYS=$(osascript -e 'display dialog "Delete files older than (Days):" default answer "'$DEFAULT_AGE_DAYS'"' -e 'text returned of result')
 
 DRY_RUN_RESPONSE=$(osascript -e 'display dialog "Do you want to run this in Dry Run Mode?\n\n(No files will be deleted, only displayed.)" buttons {"Yes", "No"} default button "No"' -e 'button returned of result')
 
