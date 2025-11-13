@@ -27,8 +27,6 @@ DISPLAY_CITY_NAME=$(echo "$CITY_NAME" | tr '_' ' ')
 
 NOTIFICATION_TITLE="Current Weather for $DISPLAY_CITY_NAME"
 
-APPLE_SCRIPT_COMMAND='display notification "'$CLEAN_WEATHER_DATA'" with title "'$NOTIFICATION_TITLE'"'
-
-osascript -e "$APPLE_SCRIPT_COMMAND" > /dev/null 2>&1
+osascript -e "display alert \"Current Weather for $DISPLAY_CITY_NAME\" message \"$CLEAN_WEATHER_DATA\""
 
 echo "Weather Fetched: $CLEAN_WEATHER_DATA"
