@@ -41,8 +41,6 @@ echo "Backup Completed!"
 
 if [ $? -eq 0 ]; then
     echo "Backup finished successfully. Saved to: $ARCHIVE_PATH"
-    osascript -e "display dialog \"Backup Success!\" message \"The file $FILENAME was saved to $BACKUP_DIR.\" buttons {\"OK\"} default button \"OK\""
 else
     echo "Backup failed!"
-    osascript -e "display alert \"Backup Failed!\" message \"The backup could not be completed. Check the terminal for errors.\" buttons {\"OK\"} default button \"OK\""
 fi
