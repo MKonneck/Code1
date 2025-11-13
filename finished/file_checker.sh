@@ -45,6 +45,7 @@ for FILE in $(find "$TARGET_DIR" -type f -mtime +"$AGE_DAYS");
         fi
     else 
         echo "--> Skipping $FILE. Will not delete."
+        continue
     fi
 done
 echo "---"
