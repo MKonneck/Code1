@@ -15,4 +15,13 @@
 #
 #---------------------------------------------------------------------
 
-WEATHER_DATA=
+CITY_NAME="GRAND_HAVEN"
+WEATHER_URL="wttr.in/$CITY_NAME?format=3"
+
+WEATHER_DATA=$(curl "$WEATHER_URL")
+
+NOTIFICATION_TITLE="Current weather for $CITY_NAME"
+
+osascript -e "display notification \"$WEATHER_DATA\" with title \"$NOTIFICATION_TITLE\"
+
+echo "Weather Fetched: $WEATHER_DATA"
