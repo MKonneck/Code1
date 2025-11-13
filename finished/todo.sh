@@ -12,30 +12,40 @@
 #  DESCRIPTION: Presents a GUI menu for three options: Add, View, or 
 #               Clear tasks. 
 #               
+#  -------------------------------------------------------------------
+#  USER CONFIGURATION BLOCK
+#
+#  @param DEFAULT_TODO_FILE: The full path to the text file where tasks 
+#                            will be saved and loaded from.
+#                           
+#
+#  -------------------------------------------------------------------
 #
 #---------------------------------------------------------------------
 
-TODO_FILE="/Users/mkonneck/github/Code1/TestFiles/ToDo_List.txt"
+# --- CONFIGURATION VARIABLES ---
+DEFAULT_TODO_FILE="/Users/ToDo_List.txt"
+# ------------------------------- 
 
 CHOICE=$(osascript -e 'display dialog "What would you like to do with your To-do list?" buttons {"Add Task", "View List", "Clear List"} default button "Add Task"' -e 'button returned of result')
 
 case "$CHOICE" in
     "Add Task")    
     TASK=$(osascript -e 'display dialog "Enter the new task:" default answer ""' -e 'text returned of result')
-    echo "$(date +%Y-%m-%d): $TASK" >> "$TODO_FILE"
+    echo "$(date +%Y-%m-%d): $TASK" >> "$DEFAULT_TODO_FILE"
 
     osascript -e "display alert \"Task Added!\" message \"$TASK\""
         ;;
     "View List")
-    if [ -s "$TODO_FILE" ]; then
-    LIST_CONTENT=$(cat "$TODO_FILE")
+    if [ -s "$DEFAULT_TODO_FILE" ]; then
+    LIST_CONTENT=$(cat "$DEFAULT_TODO_FILE")
     osascript -e "display alert \"Your To-Do List\" message \"$LIST_CONTENT\""
     else
     osascript -e "display alert \"List is Empty\" message \"You have no tasks!\""
     fi
         ;;
     "Clear List")
-        >  "$TODO_FILE"
+        >  "$DEFAULT_TODO_FILE"
         ;;
     *)
         
