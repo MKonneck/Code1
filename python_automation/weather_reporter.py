@@ -2,7 +2,6 @@ import subprocess
 import datetime
 from pathlib import Path
 import os
-import requests # <-- New Library for Web Connectivity
 
 #---------------------------------------------------------------------
 #
