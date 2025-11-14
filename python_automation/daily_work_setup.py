@@ -39,10 +39,20 @@ def create_daily_folder(root_dir: Path, suffix: str):
     full_path = root_dir / folder_name
     
     if full_path.exists():
-        print (f"I'm sorry but this folder already exists: {full_path}")
+        message=f"I'm sorry but this folder already exists: {full_path}"
+        print(message)
+        show_gui_alert("Folder Exists!", message)
     else:
-        full_path.mkdir(parents=True)
-        print (f"Congradulations, your folder has been created at: {full_path}")
+        try:
+            full_path.mkdir(parents=True)
+            message=f"Congradulations, your folder has been created at: {full_path}"
+            print(message)
+            show_gui_alert("Your folder has been created!", message)
+        except Exception as e:
+            error_msg = f"Failed to create folder: {e}"
+            print(error_msg)
+            show_gui_alert("Creation Failed!", error_msg)
+        
         
 def get_gui_input(prompt: str, default_answer: str) -> str:
     script = f'display dialog "{prompt}" default answer "{default_answer}"'
@@ -61,6 +71,18 @@ def get_gui_input(prompt: str, default_answer: str) -> str:
     except Exception as e:
         print (f'Unexpected error occured with the GUI: {e}')
         return default_answer
+            
+def show_gui_alert(title:str,message:str):
+    try:
+        subprocess.run(
+        ['osascript', '-e', f'display alert "{title}" message "{message}"'],
+        check=True,
+        capture_output=True,
+    )
+    except subprocess.CalledProcessError as e:
+        print (f'Error showing alert: {e.stderr}')
+    except Exception as e:
+        print (f'An unexpected error occured: {e}')
             
 if __name__ == "__main__":
     user_root_str = get_gui_input(
