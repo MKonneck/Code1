@@ -20,6 +20,6 @@
 read -p "Enter folder path: " folder_path
 
 if [ -d "$folder_path" ]; 
-then echo "Congradulations this folder exists!!";
+then echo "Congratulations this folder exists!!";
 else echo "Oopsie daisy, this folder doesn't exist ):"
 fi

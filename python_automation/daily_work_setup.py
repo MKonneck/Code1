@@ -45,7 +45,7 @@ def create_daily_folder(root_dir: Path, suffix: str):
     else:
         try:
             full_path.mkdir(parents=True)
-            message=f"Congradulations, your folder has been created at: {full_path}"
+            message=f"Congratulations, your folder has been created at: {full_path}"
             print(message)
             show_gui_alert("Your folder has been created!", message)
         except Exception as e:

@@ -47,5 +47,5 @@ then
     echo "I'm sorry but this folder already exists!";
 else
     mkdir "$full_path"
-    echo "Congradulations your folder has been created!";
+    echo "Congratulations your folder has been created!";
 fi 
