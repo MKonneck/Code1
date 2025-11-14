@@ -1,3 +1,4 @@
+import subprocess
 import datetime
 from pathlib import Path
 import os
@@ -43,6 +44,31 @@ def create_daily_folder(root_dir: Path, suffix: str):
         full_path.mkdir(parents=True)
         print (f"Congradulations, your folder has been created at: {full_path}")
         
+def get_gui_input(prompt: str, default_answer: str) -> str:
+    script = f'display dialog "{prompt}" default answer "{default_answer}"'
+
+    try:
+        result = subprocess.run(
+         ['osascript', '-e', f'text returned of (display dialog "{prompt}" default answer "{default_answer}")'],
+            capture_output=True,
+            text=True,
+            check=True   
+        )
+        
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return default_answer
+    except Exception as e:
+        print (f'Unexpected error occured with the GUI: {e}')
+        return default_answer
+            
 if __name__ == "__main__":
-    create_daily_folder(DEFAULT_ROOT_DIR, FOLDER_SUFFIX)
+    user_root_str = get_gui_input(
+        prompt="Enter the FULL path for your work folder:",
+        default_answer=str(DEFAULT_ROOT_DIR)
+    )
+    
+    final_root_directory= Path(user_root_str)
+    
+    create_daily_folder(final_root_directory, FOLDER_SUFFIX)
     
