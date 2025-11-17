@@ -13,7 +13,7 @@ CLICKS_PER_SECOND = 10
 #    pynput key codes:
 #    - For Function keys: Key.f6, Key.f7, etc.
 #    - For middle mouse button: Button.middle (If you wanted to use a mouse button)
-TOGGLE_KEY = Button.middle
+TOGGLE_KEY = Key.f6
 
 # --- CORE LOGIC ---
 
