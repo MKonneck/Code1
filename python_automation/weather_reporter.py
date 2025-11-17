@@ -1,31 +1,32 @@
-import subprocess
-import datetime
-from pathlib import Path
-import os
+#!/usr/bin/env python3
 
 #---------------------------------------------------------------------
 #
-#
-#  PROJECT: Automated Weather Reporter (Python)
+#  PROJECT: Automated weather reporter (Python version)
 #
 #  @AUTHOR: Matthew Konneck
-#  @VERSION: V2.0
-#  @DATE: 11-14-25
+#  @VERSION: V1.0
+#  @DATE: 11-17-25
 #
-#  DESCRIPTION: Fetches the current weather forecast for a user-specified 
-#               location from wttr.in and displays a summary via alert box.
+#  DESCRIPTION: Uses Python to fetch the current weather forecast
+#               for your chosen location from wttr.in and display
+#               a simple summary using an osascript notification.
 #
 #  -------------------------------------------------------------------
 #  USER CONFIGURATION BLOCK
 #
-#  @param DEFAULT_CITY:    The city/location that appears as the default answer (e.g., "Grand_Haven_mi").
-#  @param WEATHER_FORMAT:  The format string appended to the URL (e.g., "?format=3").
+#  @param DEFAULT_CITY: The default city to use if none is entered.
+#  @param WEATHER_FORMAT: The wttr.in format string for output.
 #
 #  -------------------------------------------------------------------
 #
 #---------------------------------------------------------------------
 
+import subprocess
+import urllib.request
+import sys
+
 # --- CONFIGURATION VARIABLES ---
-DEFAULT_CITY="Holland_mi"
-WEATHER_FORMAT="?format=%c%C\n%t\n%p\n%w"
+DEFAULT_CITY = "Holland_MI"
+WEATHER_FORMAT = "?format=%c%C\n%t\n%p\n%w"
 # -------------------------------
