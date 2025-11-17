@@ -65,6 +65,8 @@ def main():
     print("Press the TOGGLE KEY to start/stop clicking.")
     print("Press ESC to exit the program.")
     
+    time.sleep(1)
+    
     # Start the keyboard listener and keep the main thread alive
     with KeyboardListener(on_press=on_press) as listener:  # type: ignore[reportArgumentType]
         listener.join()

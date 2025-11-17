@@ -1,3 +1,0 @@
-([('autoclicker',
-   '/Users/mkonneck/GitHub/Code1/python_automation/dist/autoclicker',
-   'EXECUTABLE')],)
