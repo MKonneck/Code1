@@ -1,8 +1,7 @@
-G1 Z5 F1200         ; Lift to safe height first
-G1 X10 Y10 F6000    ; Move to start corner
-
-G1 Z0.6 F1200       ; Drop close to bed (safe height above plate)
-G1 F4000            ; Set movement speed
+G1 Z5 F1200
+G1 X10 Y10 F6000
+G1 Z0.6 F1200
+G1 F4000
 G1 X170 Y10
 G1 X170 Y170
 G1 X10 Y170
@@ -28,6 +27,6 @@ G1 X170 Y145
 G1 X10 Y145
 G1 X10 Y160
 G1 X170 Y160
-G1 Z5 F1200         ; Lift away
-G1 X10 Y10 F6000    ; Return home-ish
-M400                ; Wait for moves to finishv
+G1 Z5 F1200         
+G1 X10 Y10 F6000    
+M400                
