@@ -20,9 +20,17 @@ Apple does **not** let normal App Store apps:
 
 So SignalLens uses what *is* allowed: CoreBluetooth RSSI, Network path APIs, and reachability probes. That is still enough to answer questions like “is the room full of BLE radios?” and “is the internet path actually healthy?”
 
-## Open in Xcode
+## Run without Xcode (recommended if you don’t have a Mac IDE)
 
-1. On a Mac, open `SignalLens/SignalLens.xcodeproj`
+Open the App Playground in **Swift Playgrounds** on iPad/Mac:
+
+`SignalLens.swiftpm`
+
+See [`WITHOUT_XCODE.md`](WITHOUT_XCODE.md) for Playgrounds, cloud/TestFlight, and what won’t work (web, Expo Go, etc.).
+
+## Open in Xcode (optional)
+
+1. On a Mac, open `SignalLens/SignalLens.xcodeproj` **or** `SignalLens.swiftpm`
 2. Select your **Team** under Signing & Capabilities
 3. Plug in an iPhone (Bluetooth scanning is limited/empty on Simulator)
 4. Build & run, allow **Bluetooth** and **Location** when prompted
