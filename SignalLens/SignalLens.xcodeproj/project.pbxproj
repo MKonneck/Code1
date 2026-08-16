@@ -1,0 +1,415 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B001APP00000000000000001 /* SignalLensApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001APP00000000000000001 /* SignalLensApp.swift */; };
+		B001MOD00000000000000002 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001MOD00000000000000002 /* Models.swift */; };
+		B001BTS00000000000000003 /* BluetoothScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001BTS00000000000000003 /* BluetoothScanner.swift */; };
+		B001NET00000000000000004 /* NetworkEnvironmentMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001NET00000000000000004 /* NetworkEnvironmentMonitor.swift */; };
+		B001LAT00000000000000005 /* LatencyProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001LAT00000000000000005 /* LatencyProbe.swift */; };
+		B001RAD00000000000000006 /* RadioEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001RAD00000000000000006 /* RadioEnvironment.swift */; };
+		B001THM00000000000000007 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001THM00000000000000007 /* Theme.swift */; };
+		B001ROT00000000000000008 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001ROT00000000000000008 /* RootView.swift */; };
+		B001OVR00000000000000009 /* OverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001OVR00000000000000009 /* OverviewView.swift */; };
+		B001BTV0000000000000000A /* BluetoothRadarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001BTV0000000000000000A /* BluetoothRadarView.swift */; };
+		B001NLV0000000000000000B /* NetworkLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001NLV0000000000000000B /* NetworkLabView.swift */; };
+		B001INS0000000000000000C /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001INS0000000000000000C /* InsightsView.swift */; };
+		B001AST0000000000000000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F001AST0000000000000000D /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		P001PRD00000000000000001 /* SignalLens.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SignalLens.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F001APP00000000000000001 /* SignalLensApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalLensApp.swift; sourceTree = "<group>"; };
+		F001MOD00000000000000002 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		F001BTS00000000000000003 /* BluetoothScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothScanner.swift; sourceTree = "<group>"; };
+		F001NET00000000000000004 /* NetworkEnvironmentMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkEnvironmentMonitor.swift; sourceTree = "<group>"; };
+		F001LAT00000000000000005 /* LatencyProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatencyProbe.swift; sourceTree = "<group>"; };
+		F001RAD00000000000000006 /* RadioEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadioEnvironment.swift; sourceTree = "<group>"; };
+		F001THM00000000000000007 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		F001ROT00000000000000008 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		F001OVR00000000000000009 /* OverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewView.swift; sourceTree = "<group>"; };
+		F001BTV0000000000000000A /* BluetoothRadarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothRadarView.swift; sourceTree = "<group>"; };
+		F001NLV0000000000000000B /* NetworkLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkLabView.swift; sourceTree = "<group>"; };
+		F001INS0000000000000000C /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
+		F001AST0000000000000000D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F001INF0000000000000000E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F001ENT0000000000000000F /* SignalLens.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SignalLens.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		PH01FRM00000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		G001ROOT0000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				G001APP00000000000000002 /* SignalLens */,
+				G001PROD0000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		G001PROD0000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				P001PRD00000000000000001 /* SignalLens.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		G001APP00000000000000002 /* SignalLens */ = {
+			isa = PBXGroup;
+			children = (
+				G001APPS0000000000000004 /* App */,
+				G001MODS0000000000000005 /* Models */,
+				G001SERV0000000000000006 /* Services */,
+				G001VIEW0000000000000007 /* Views */,
+				G001UTIL0000000000000008 /* Utilities */,
+				F001AST0000000000000000D /* Assets.xcassets */,
+				F001INF0000000000000000E /* Info.plist */,
+				F001ENT0000000000000000F /* SignalLens.entitlements */,
+			);
+			path = SignalLens;
+			sourceTree = "<group>";
+		};
+		G001APPS0000000000000004 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F001APP00000000000000001 /* SignalLensApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		G001MODS0000000000000005 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F001MOD00000000000000002 /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		G001SERV0000000000000006 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				F001BTS00000000000000003 /* BluetoothScanner.swift */,
+				F001NET00000000000000004 /* NetworkEnvironmentMonitor.swift */,
+				F001LAT00000000000000005 /* LatencyProbe.swift */,
+				F001RAD00000000000000006 /* RadioEnvironment.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		G001VIEW0000000000000007 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F001ROT00000000000000008 /* RootView.swift */,
+				F001OVR00000000000000009 /* OverviewView.swift */,
+				F001BTV0000000000000000A /* BluetoothRadarView.swift */,
+				F001NLV0000000000000000B /* NetworkLabView.swift */,
+				F001INS0000000000000000C /* InsightsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		G001UTIL0000000000000008 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				F001THM00000000000000007 /* Theme.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		T001APP00000000000000001 /* SignalLens */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C001TGT00000000000000002 /* Build configuration list for PBXNativeTarget "SignalLens" */;
+			buildPhases = (
+				PH01SRC00000000000000001 /* Sources */,
+				PH01FRM00000000000000001 /* Frameworks */,
+				PH01RES00000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SignalLens;
+			productName = SignalLens;
+			productReference = P001PRD00000000000000001 /* SignalLens.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		PRJ000100000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					T001APP00000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = C001PRJ00000000000000001 /* Build configuration list for PBXProject "SignalLens" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = G001ROOT0000000000000001;
+			productRefGroup = G001PROD0000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				T001APP00000000000000001 /* SignalLens */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		PH01RES00000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B001AST0000000000000000D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		PH01SRC00000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B001APP00000000000000001 /* SignalLensApp.swift in Sources */,
+				B001MOD00000000000000002 /* Models.swift in Sources */,
+				B001BTS00000000000000003 /* BluetoothScanner.swift in Sources */,
+				B001NET00000000000000004 /* NetworkEnvironmentMonitor.swift in Sources */,
+				B001LAT00000000000000005 /* LatencyProbe.swift in Sources */,
+				B001RAD00000000000000006 /* RadioEnvironment.swift in Sources */,
+				B001THM00000000000000007 /* Theme.swift in Sources */,
+				B001ROT00000000000000008 /* RootView.swift in Sources */,
+				B001OVR00000000000000009 /* OverviewView.swift in Sources */,
+				B001BTV0000000000000000A /* BluetoothRadarView.swift in Sources */,
+				B001NLV0000000000000000B /* NetworkLabView.swift in Sources */,
+				B001INS0000000000000000C /* InsightsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		CFGPRJDBG000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CFGPRJREL000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dwarf-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CFGTGTDBG000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SignalLens/SignalLens.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SignalLens/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.signallens.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CFGTGTREL000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SignalLens/SignalLens.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SignalLens/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.signallens.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C001PRJ00000000000000001 /* Build configuration list for PBXProject "SignalLens" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFGPRJDBG000000000000001 /* Debug */,
+				CFGPRJREL000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C001TGT00000000000000002 /* Build configuration list for PBXNativeTarget "SignalLens" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFGTGTDBG000000000000001 /* Debug */,
+				CFGTGTREL000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = PRJ000100000000000000001 /* Project object */;
+}
