@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3efe6">
+  <meta name="description" content="Log the wires you see in a switch box, outlet, or light. Leave blanks. Mark what you're not sure about and come back later.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Wires">
+  <title>Wire Tracker</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app" class="shell">
+    <h1>Wire Tracker</h1>
+    <p class="lede">Loading your notes…</p>
+  </div>
+  <nav id="nav" class="nav" hidden></nav>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <div id="overlay"></div>
+  <noscript>
+    <p>Wire Tracker needs JavaScript. It keeps your notes on this phone.</p>
+  </noscript>
+  <script src="logic.js"></script>
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
