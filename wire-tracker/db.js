@@ -1,8 +1,8 @@
 /* IndexedDB storage. Photos live here as blobs. Text is also mirrored to localStorage by app.js. */
 (function (root) {
   const DB_NAME = "wire-tracker";
-  const DB_VERSION = 1;
-  const STORES = ["boxes", "wires", "groups", "photos"];
+  const DB_VERSION = 2;
+  const STORES = ["boxes", "wires", "groups", "photos", "diagrams", "nodes", "strokes"];
   let dbPromise = null;
 
   function open() {
@@ -43,6 +43,9 @@
       wires: rows[1],
       groups: rows[2],
       photos: rows[3],
+      diagrams: rows[4],
+      nodes: rows[5],
+      strokes: rows[6],
     }));
   }
 
@@ -73,6 +76,9 @@
       (data.wires || []).forEach((item) => tx.objectStore("wires").put(item));
       (data.groups || []).forEach((item) => tx.objectStore("groups").put(item));
       (data.photos || []).forEach((item) => tx.objectStore("photos").put(item));
+      (data.diagrams || []).forEach((item) => tx.objectStore("diagrams").put(item));
+      (data.nodes || []).forEach((item) => tx.objectStore("nodes").put(item));
+      (data.strokes || []).forEach((item) => tx.objectStore("strokes").put(item));
       tx.oncomplete = function () { resolve(); };
       tx.onerror = function () { reject(tx.error || new Error("Could not replace storage")); };
       tx.onabort = function () { reject(tx.error || new Error("Replace was aborted")); };

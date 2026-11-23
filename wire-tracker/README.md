@@ -4,6 +4,8 @@ A phone-friendly notebook for what you see inside a switch box, outlet, light, o
 
 Your notes stay in the browser on that phone or computer. Nothing is uploaded. Use **Backup** to export a file or load one on another device.
 
+**Draw** is the touch canvas. Drop a box, pick a color, and drag from one box to another. Cable draws a 2-wire or 3-wire bundle in one stroke. Tap anything to rename it or mark it Not sure. **Garage example** loads the south 3-way, 4-way, north 3-way, two outlets, and attic junction.
+
 ## Use it on an iPhone
 
 1. Open the site in Safari.

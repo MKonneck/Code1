@@ -175,6 +175,83 @@ test("a finished save stamps only its own batch", () => {
   assert.equal(L.advancePersistedStamp(300, 250), 300);
 });
 
+test("garage example matches the hand-drawn cable list", () => {
+  const data = L.garageExample();
+  assert.equal(data.nodes.length, 6);
+  assert.equal(data.strokes.length, 6);
+  const byMark = {};
+  data.nodes.forEach((node) => { byMark[node.mark] = node; });
+  function conductors(from, to) {
+    const stroke = data.strokes.find((item) => {
+      const a = item.fromNodeId === byMark[from].id && item.toNodeId === byMark[to].id;
+      const b = item.fromNodeId === byMark[to].id && item.toNodeId === byMark[from].id;
+      return a || b;
+    });
+    assert.ok(stroke, from + "-" + to);
+    return stroke.conductors;
+  }
+  assert.equal(conductors("6", "3"), 3);
+  assert.equal(conductors("6", "5"), 3);
+  assert.equal(conductors("6", "2"), 2);
+  assert.equal(conductors("5", "1"), 3);
+  assert.equal(conductors("5", "4"), 2);
+  assert.equal(conductors("5", "2"), 2);
+  assert.equal(data.wires.length, 30);
+  data.wires.forEach((wire) => {
+    assert.ok(wire.linkedWireId);
+    assert.equal(wire.unsure, false);
+  });
+  assert.equal(L.allIssues(data).length, 0);
+  const attic = data.boxes.find((box) => box.name === "Attic power");
+  assert.match(attic.notes, /black and the red/);
+});
+
+test("a drawn wire marked not sure shows on the to-do list", () => {
+  const data = L.garageExample();
+  const stroke = data.strokes[0];
+  L.setStrokeUnsure(data, stroke.id, true);
+  const issues = L.allIssues(data).filter((item) => item.field === "unsure");
+  assert.equal(issues.length, stroke.wireIds.length);
+  const cleaned = L.cleanState(data);
+  assert.equal(cleaned.strokes.length, 6);
+  assert.equal(cleaned.nodes.length, 6);
+});
+
+test("deleting a drawn cable removes its wires and keeps the boxes", () => {
+  const data = L.garageExample();
+  const beforeBoxes = data.boxes.length;
+  const stroke = data.strokes.find((item) => item.conductors === 2);
+  const result = L.deleteDrawnStroke(data, stroke.id);
+  assert.equal(result.ok, true);
+  assert.equal(data.boxes.length, beforeBoxes);
+  assert.equal(data.strokes.length, 5);
+  result.removedWireIds.forEach((id) => {
+    assert.equal(data.wires.some((wire) => wire.id === id), false);
+  });
+});
+
+test("version 1 backups still import", () => {
+  const box = L.blankBox();
+  box.name = "Hall";
+  const result = L.importBackup({ app: "wire-tracker", version: 1, boxes: [box], wires: [], groups: [] });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.diagrams.length, 0);
+  assert.equal(result.data.boxes.length, 1);
+});
+
+test("tapping a drawn box hits that box, not the cable beside it", () => {
+  const data = L.garageExample();
+  const south = data.nodes.find((node) => node.mark === "1");
+  const hit = L.hitDrawing(data.nodes, data.strokes, south.x + 20, south.y + 20, 24);
+  assert.deepEqual(hit, { type: "node", id: south.id });
+  const from = data.nodes.find((node) => node.mark === "6");
+  const to = data.nodes.find((node) => node.mark === "2");
+  const a = L.nodeCenter(from);
+  const b = L.nodeCenter(to);
+  const mid = L.hitDrawing(data.nodes, data.strokes, (a.x + b.x) / 2, (a.y + b.y) / 2, 28);
+  assert.equal(mid.type, "stroke");
+});
+
 test("escapeHtml neutralizes markup", () => {
   assert.equal(L.escapeHtml(`<b class="a">&"'</b>`), "&lt;b class=&quot;a&quot;&gt;&amp;&quot;&#39;&lt;/b&gt;");
 });

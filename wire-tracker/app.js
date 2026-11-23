@@ -25,9 +25,18 @@
     focusSection: null,
     stamp: 0,
     ready: false,
+    drawTool: "move",
+    drawShape: "3way",
+    drawColor: "black",
+    drawColorOther: "",
+    drawConductors: 2,
+    selection: null,
+    rubber: null,
   };
 
   const pending = new Map();
+  const drawHist = { undo: [], redo: [] };
+  let drawHandle = null;
   let flushTimer = null;
   let toastTimer = null;
   let lastRouteKey = "";
@@ -79,6 +88,9 @@
         boxes: state.data.boxes,
         wires: state.data.wires,
         groups: state.data.groups,
+        diagrams: state.data.diagrams || [],
+        nodes: state.data.nodes || [],
+        strokes: state.data.strokes || [],
       }));
     } catch (err) { /* private mode or full storage */ }
   }
@@ -88,7 +100,15 @@
       const raw = JSON.parse(localStorage.getItem(LOCAL_KEY) || "null");
       if (!raw || typeof raw !== "object") return null;
       const cleaned = L.cleanState(raw);
-      return { boxes: cleaned.boxes, wires: cleaned.wires, groups: cleaned.groups, savedAt: Number(raw.savedAt) || 0 };
+      return {
+        boxes: cleaned.boxes,
+        wires: cleaned.wires,
+        groups: cleaned.groups,
+        diagrams: cleaned.diagrams,
+        nodes: cleaned.nodes,
+        strokes: cleaned.strokes,
+        savedAt: Number(raw.savedAt) || 0,
+      };
     } catch (err) {
       return null;
     }
@@ -161,19 +181,35 @@
       let boxes = idb.boxes || [];
       let wires = idb.wires || [];
       let groups = idb.groups || [];
+      let diagrams = idb.diagrams || [];
+      let nodes = idb.nodes || [];
+      let strokes = idb.strokes || [];
       let restored = false;
       if (local && local.savedAt > stamp) {
         boxes = local.boxes;
         wires = local.wires;
         groups = local.groups;
+        diagrams = local.diagrams;
+        nodes = local.nodes;
+        strokes = local.strokes;
         restored = true;
       } else if (idbError && local) {
         boxes = local.boxes;
         wires = local.wires;
         groups = local.groups;
+        diagrams = local.diagrams;
+        nodes = local.nodes;
+        strokes = local.strokes;
         restored = true;
       }
-      const cleaned = L.cleanState({ boxes: boxes, wires: wires, groups: groups });
+      const cleaned = L.cleanState({
+        boxes: boxes,
+        wires: wires,
+        groups: groups,
+        diagrams: diagrams,
+        nodes: nodes,
+        strokes: strokes,
+      });
       const boxIds = new Set(cleaned.boxes.map((box) => box.id));
       const photos = (idb.photos || []).filter((photo) => photo && photo.blob && boxIds.has(photo.boxId));
       const finish = Promise.resolve();
@@ -183,6 +219,9 @@
             boxes: cleaned.boxes,
             wires: cleaned.wires,
             groups: cleaned.groups,
+            diagrams: cleaned.diagrams,
+            nodes: cleaned.nodes,
+            strokes: cleaned.strokes,
             photos: photos,
           }).then(() => {
             try { localStorage.setItem(STAMP_KEY, String(local.savedAt || Date.now())); } catch (err) { /* ignore */ }
@@ -193,6 +232,9 @@
         boxes: cleaned.boxes,
         wires: cleaned.wires,
         groups: cleaned.groups,
+        diagrams: cleaned.diagrams,
+        nodes: cleaned.nodes,
+        strokes: cleaned.strokes,
         photos: photos,
         idbError: idbError,
         restored: restored,
@@ -223,6 +265,8 @@
     if (parts[0] === "todos") return { name: "todos" };
     if (parts[0] === "backup") return { name: "backup" };
     if (parts[0] === "new") return { name: "new-box" };
+    if (parts[0] === "drawings") return { name: "drawings" };
+    if (parts[0] === "draw" && parts[1]) return { name: "draw", diagramId: parts[1], select: params.get("select") || "" };
     if (parts[0] === "box" && parts[1]) {
       const boxId = parts[1];
       if (parts[2] === "edit") return { name: "edit-box", boxId: boxId, focus: focus };
@@ -234,11 +278,13 @@
   }
 
   function routeKey(route) {
-    return [route.name, route.boxId || "", route.wireId || ""].join(":");
+    return [route.name, route.boxId || "", route.wireId || "", route.diagramId || ""].join(":");
   }
 
   function parentHash(route) {
     if (!route) return "#/";
+    if (route.name === "draw") return "#/drawings";
+    if (route.name === "drawings") return "#/";
     if (route.boxId && route.name !== "box") return "#/box/" + encodeURIComponent(route.boxId);
     return "#/";
   }
@@ -251,6 +297,21 @@
       leaveWireIfEmpty(previous.wireId);
     }
     if (previous && previous.name === "new-box" && next.name !== "new-box") state.draft = null;
+    if (previous && previous.name === "draw" && next.name !== "draw") {
+      drawHist.undo = [];
+      drawHist.redo = [];
+      state.selection = null;
+      state.rubber = null;
+    }
+    if (next.name === "draw" && (!previous || previous.diagramId !== next.diagramId)) {
+      const nodes = (state.data.nodes || []).filter((node) => node.diagramId === next.diagramId);
+      state.drawTool = nodes.length ? "move" : "box";
+      state.selection = null;
+    }
+    if (next.select) {
+      const splitAt = next.select.indexOf(":");
+      if (splitAt > 0) state.selection = { type: next.select.slice(0, splitAt), id: next.select.slice(splitAt + 1) };
+    }
     state.route = next;
     if (next.focus) state.focusSection = next.focus;
     render();
@@ -282,7 +343,7 @@
   }
 
   function wantsNav(name) {
-    return name === "home" || name === "todos" || name === "backup" || name === "box" || name === "diagram";
+    return name === "home" || name === "todos" || name === "backup" || name === "box" || name === "diagram" || name === "drawings";
   }
 
   function logo() {
@@ -306,7 +367,7 @@
     const nav = document.getElementById("nav");
     const overlay = document.getElementById("overlay");
     try {
-      app.className = "shell" + (wantsNav(route.name) ? "" : " no-nav") + (route.name === "new-box" ? " has-dock" : "");
+      app.className = "shell" + (route.name === "draw" ? " draw-mode" : "") + (wantsNav(route.name) ? "" : " no-nav") + (route.name === "new-box" ? " has-dock" : "");
       app.innerHTML = paint(route);
       nav.hidden = !wantsNav(route.name);
       nav.innerHTML = wantsNav(route.name) ? renderNav(route) : "";
@@ -329,6 +390,14 @@
     } else {
       window.scrollTo(0, 0);
     }
+    if (drawHandle) {
+      drawHandle.destroy();
+      drawHandle = null;
+    }
+    if (route.name === "draw") {
+      const canvas = document.getElementById("draw-canvas");
+      if (canvas && window.WireDraw) drawHandle = window.WireDraw.mount(canvas, drawApi);
+    }
   }
 
   function documentTitle(route) {
@@ -340,15 +409,18 @@
     if (route.name === "todos") return "To figure out · Wire Tracker";
     if (route.name === "backup") return "Backup · Wire Tracker";
     if (route.name === "new-box") return "New box · Wire Tracker";
+    if (route.name === "drawings") return "Draw · Wire Tracker";
+    if (route.name === "draw") return "Drawing · Wire Tracker";
     return "Wire Tracker";
   }
 
   function renderNav(route) {
-    const current = route.name === "todos" ? "todos" : route.name === "backup" ? "backup" : "home";
+    const current = route.name === "todos" ? "todos" : route.name === "backup" ? "backup" : route.name === "drawings" || route.name === "draw" ? "draw" : "home";
     const issues = L.allIssues(state.data).length;
     const badge = issues ? '<span class="badge">' + (issues > 9 ? "9+" : String(issues)) + "</span>" : "";
     return [
       navLink("#/", "Boxes", current === "home"),
+      navLink("#/drawings", "Draw", current === "draw"),
       navLink("#/todos", "To-do" + badge, current === "todos"),
       navLink("#/backup", "Backup", current === "backup"),
     ].join("");
@@ -360,6 +432,8 @@
 
   function paint(route) {
     if (route.name === "home") return renderHome();
+    if (route.name === "drawings") return renderDrawings();
+    if (route.name === "draw") return renderDraw(route.diagramId);
     if (route.name === "todos") return renderTodos();
     if (route.name === "backup") return renderBackup();
     if (route.name === "new-box") return renderBoxForm(ensureDraft(), true);
@@ -428,7 +502,7 @@
     return '<div class="topbar"><div class="brand">' + logo() + '<p class="eyebrow">Wire Tracker</p></div>' + safetyButton() + "</div>" +
       "<h1>Your boxes</h1><p class=\"lede\">Write down what you see. Skip anything you are not sure about.</p>" +
       banner +
-      '<div class="stack"><button type="button" class="btn primary" data-action="new-box">Add a box</button></div>' +
+      '<div class="stack"><button type="button" class="btn primary" data-action="new-box">Add a box</button><a class="btn secondary" href="#/drawings">Draw</a></div>' +
       safety +
       finder + rooms + body;
   }
@@ -510,6 +584,14 @@
   }
 
   function issueHref(item) {
+    if (item.field === "unsure" && item.wireId) {
+      const stroke = (state.data.strokes || []).find((itemStroke) => itemStroke.wireIds.indexOf(item.wireId) !== -1);
+      if (stroke) return "#/draw/" + encodeURIComponent(stroke.diagramId) + "?select=stroke:" + encodeURIComponent(stroke.id);
+    }
+    if (item.field === "unsure") {
+      const node = (state.data.nodes || []).find((itemNode) => itemNode.boxId === item.boxId);
+      if (node) return "#/draw/" + encodeURIComponent(node.diagramId) + "?select=node:" + encodeURIComponent(node.id);
+    }
     if (item.kind === "breaker") return "#/box/" + encodeURIComponent(item.boxId) + "/edit?focus=field-breaker";
     return "#/box/" + encodeURIComponent(item.boxId) + "/wire/" + encodeURIComponent(item.wireId) + "?focus=" + encodeURIComponent(item.focus || "");
   }
@@ -873,6 +955,10 @@
 
   function onInput(event) {
     const el = event.target;
+    if (el.id === "draw-label" || el.id === "draw-color-other") {
+      onDrawInput(el);
+      return;
+    }
     if (el.id === "find-box") {
       state.query = el.value;
       const list = document.getElementById("box-list");
@@ -928,6 +1014,13 @@
   }
 
   function onKey(event) {
+    const typing = event.target && (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA");
+    if (!typing && state.route.name === "draw" && (event.metaKey || event.ctrlKey) && (event.key === "z" || event.key === "Z")) {
+      event.preventDefault();
+      if (event.shiftKey) redoDraw();
+      else undoDraw();
+      return;
+    }
     if (event.key !== "Escape") return;
     if (state.confirm) {
       state.confirm = null;
@@ -950,6 +1043,11 @@
     if (!actionEl) return;
     const action = actionEl.dataset.action;
     if (action === "stop") return;
+    if (action.indexOf("draw-") === 0) {
+      event.preventDefault();
+      onDrawAction(action, actionEl);
+      return;
+    }
     if (action === "confirm-no" || action === "close-export" || action === "close-photo" || action === "close-safety" || action === "ack-safety" || action === "back" || action === "new-box") {
       event.preventDefault();
     }
@@ -1335,6 +1433,8 @@
           queue("photos", "del", id);
         });
         result.touched.forEach((wire) => queue("wires", "put", wire));
+        (result.removedNodeIds || []).forEach((id) => queue("nodes", "del", id));
+        (result.removedStrokeIds || []).forEach((id) => queue("strokes", "del", id));
         rememberText();
         replaceHash("#/");
       },
@@ -1461,11 +1561,14 @@
     }).then((result) => {
       const payload = {
         app: "wire-tracker",
-        version: 1,
+        version: 2,
         exportedAt: new Date().toISOString(),
         boxes: state.data.boxes,
         wires: state.data.wires,
         groups: state.data.groups,
+        diagrams: state.data.diagrams || [],
+        nodes: state.data.nodes || [],
+        strokes: state.data.strokes || [],
         photos: result.photos,
       };
       const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
@@ -1587,6 +1690,9 @@
       boxes: pendingImport.data.boxes,
       wires: pendingImport.data.wires,
       groups: pendingImport.data.groups,
+      diagrams: pendingImport.data.diagrams || [],
+      nodes: pendingImport.data.nodes || [],
+      strokes: pendingImport.data.strokes || [],
       photos: photos,
     };
     pending.clear();
@@ -1607,6 +1713,386 @@
     });
   }
 
+  function findDiagram(id) {
+    return (state.data.diagrams || []).find((diagram) => diagram.id === id) || null;
+  }
+
+  function textSnapshot() {
+    return JSON.parse(JSON.stringify({
+      boxes: state.data.boxes,
+      wires: state.data.wires,
+      groups: state.data.groups,
+      diagrams: state.data.diagrams || [],
+      nodes: state.data.nodes || [],
+      strokes: state.data.strokes || [],
+    }));
+  }
+
+  function syncText(before, after) {
+    ["boxes", "wires", "groups", "diagrams", "nodes", "strokes"].forEach((name) => {
+      const next = after[name] || [];
+      const prev = before[name] || [];
+      const ids = new Set(next.map((item) => item.id));
+      prev.forEach((item) => {
+        if (!ids.has(item.id)) queue(name, "del", item.id);
+      });
+      next.forEach((item) => queue(name, "put", item));
+    });
+  }
+
+  function pushUndo() {
+    drawHist.undo.push(textSnapshot());
+    if (drawHist.undo.length > 40) drawHist.undo.shift();
+    drawHist.redo = [];
+  }
+
+  function applySnapshot(snap) {
+    const before = textSnapshot();
+    state.data.boxes = snap.boxes;
+    state.data.wires = snap.wires;
+    state.data.groups = snap.groups;
+    state.data.diagrams = snap.diagrams;
+    state.data.nodes = snap.nodes;
+    state.data.strokes = snap.strokes;
+    syncText(before, snap);
+    rememberText();
+  }
+
+  function undoDraw() {
+    if (!drawHist.undo.length) return;
+    drawHist.redo.push(textSnapshot());
+    const snap = drawHist.undo.pop();
+    applySnapshot(snap);
+    state.selection = null;
+    if (state.route.name === "draw" && !findDiagram(state.route.diagramId)) {
+      replaceHash("#/drawings");
+      return;
+    }
+    render();
+  }
+
+  function redoDraw() {
+    if (!drawHist.redo.length) return;
+    drawHist.undo.push(textSnapshot());
+    const snap = drawHist.redo.pop();
+    applySnapshot(snap);
+    state.selection = null;
+    render();
+  }
+
+  function commitDrawing(mutator) {
+    pushUndo();
+    const before = drawHist.undo[drawHist.undo.length - 1];
+    const result = mutator(state.data);
+    syncText(before, textSnapshot());
+    rememberText();
+    return result;
+  }
+
+  function drawNodes(diagramId) {
+    return (state.data.nodes || []).filter((node) => node.diagramId === diagramId);
+  }
+
+  function drawStrokes(diagramId) {
+    return (state.data.strokes || []).filter((stroke) => stroke.diagramId === diagramId);
+  }
+
+  const drawApi = {
+    getModel: function () {
+      const diagram = findDiagram(state.route.diagramId) || { viewX: 28, viewY: 28, viewScale: 1 };
+      return {
+        diagram: diagram,
+        nodes: drawNodes(diagram.id),
+        strokes: drawStrokes(diagram.id),
+        boxes: state.data.boxes,
+        view: {
+          get x() { return diagram.viewX; },
+          set x(value) { diagram.viewX = value; },
+          get y() { return diagram.viewY; },
+          set y(value) { diagram.viewY = value; },
+          get scale() { return diagram.viewScale || 1; },
+          set scale(value) { diagram.viewScale = value; },
+        },
+        tool: state.drawTool,
+        color: state.drawColor,
+        selection: state.selection,
+        rubber: state.rubber,
+      };
+    },
+    setRubber: function (rubber) { state.rubber = rubber; },
+    saveView: function () {
+      const diagram = findDiagram(state.route.diagramId);
+      if (!diagram) return;
+      diagram.updatedAt = Date.now();
+      queue("diagrams", "put", diagram);
+      rememberText();
+    },
+    armUndo: function () { pushUndo(); },
+    cancelUndo: function () { drawHist.undo.pop(); },
+    previewMove: function (id, x, y) { L.moveDrawnNode(state.data, id, x, y); },
+    commitMove: function () {
+      const before = drawHist.undo[drawHist.undo.length - 1];
+      if (before) syncText(before, textSnapshot());
+      rememberText();
+      if (drawHandle) drawHandle.redraw();
+    },
+    place: function (x, y) {
+      const diagram = findDiagram(state.route.diagramId);
+      if (!diagram) return;
+      const shape = L.DRAW_SHAPES.find((item) => item.id === state.drawShape) || L.DRAW_SHAPES[0];
+      const count = drawNodes(diagram.id).filter((node) => node.kind === shape.id).length;
+      commitDrawing((data) => L.addDrawnBox(data, {
+        diagramId: diagram.id,
+        kind: shape.id,
+        name: count ? shape.label + " " + (count + 1) : shape.label,
+        x: x - L.NODE_W / 2,
+        y: y - L.NODE_H / 2,
+      }));
+      render();
+    },
+    connect: function (fromId, toId) {
+      const result = commitDrawing((data) => L.addDrawnStroke(data, {
+        fromNodeId: fromId,
+        toNodeId: toId,
+        kind: state.drawTool === "cable" ? "cable" : "wire",
+        conductors: state.drawConductors,
+        color: state.drawColor,
+        colorOther: state.drawColorOther,
+      }));
+      if (!result.ok) {
+        drawHist.undo.pop();
+        toast(result.error);
+        if (drawHandle) drawHandle.redraw();
+        return;
+      }
+      render();
+    },
+    select: function (hit) {
+      state.selection = hit;
+      state.labelUndo = false;
+      render();
+    },
+  };
+
+  function renderDrawings() {
+    const diagrams = state.data.diagrams || [];
+    const cards = diagrams.map((diagram) => {
+      const count = drawNodes(diagram.id).length;
+      return '<a class="box-card" href="#/draw/' + encodeURIComponent(diagram.id) + '"><h2>' + esc(diagram.name || "Drawing") + "</h2><p class=\"meta\">" +
+        (count ? countPhrase(count, "box", "boxes") : "Empty") + "</p></a>";
+    }).join("");
+    return '<div class="topbar"><button type="button" class="back" data-action="back">Boxes</button>' + safetyButton() + "</div>" +
+      "<h1>Draw</h1><p class=\"lede\">Drop boxes on the page. Drag a finger from one box to another to add a wire.</p>" +
+      '<div class="stack"><button type="button" class="btn primary" data-action="draw-new">New drawing</button>' +
+      '<button type="button" class="btn secondary" data-action="draw-example">Garage example</button></div>' +
+      cards;
+  }
+
+  function drawHint() {
+    if (state.drawTool === "box") return "Tap the page to drop a box.";
+    if (state.drawTool === "wire") return "Drag from one box to another.";
+    if (state.drawTool === "cable") return "Drag a whole cable from box to box.";
+    return "Drag a box. Tap it to edit.";
+  }
+
+  function renderDraw(diagramId) {
+    const diagram = findDiagram(diagramId);
+    if (!diagram) return renderMissing("That drawing");
+    const nodes = drawNodes(diagramId);
+    const selectedNode = state.selection && state.selection.type === "node"
+      ? nodes.find((node) => node.id === state.selection.id) : null;
+    const selectedStroke = state.selection && state.selection.type === "stroke"
+      ? drawStrokes(diagramId).find((stroke) => stroke.id === state.selection.id) : null;
+    const tools = [
+      ["move", "Move"],
+      ["box", "Add box"],
+      ["wire", "Wire"],
+      ["cable", "Cable"],
+    ].map((pair) => '<button type="button" class="tool" aria-pressed="' + (state.drawTool === pair[0]) + '" data-action="draw-tool" data-tool="' + pair[0] + '">' + pair[1] + "</button>").join("");
+    let extra = "";
+    if (!state.selection && state.drawTool === "box") {
+      extra = '<div class="choice-row">' + L.DRAW_SHAPES.map((shape) => '<button type="button" class="mini" aria-pressed="' + (state.drawShape === shape.id) + '" data-action="draw-shape" data-shape="' + shape.id + '">' + esc(shape.label) + "</button>").join("") + "</div>";
+    } else if (!state.selection && state.drawTool === "wire") {
+      extra = '<div class="choice-row">' + L.DRAW_COLORS.map((color) => {
+        const style = L.colorStyle({ color: color.id });
+        const caution = color.id === "other" ? " caution" : "";
+        return '<button type="button" class="mini' + caution + '" aria-pressed="' + (state.drawColor === color.id) + '" data-action="draw-color" data-color="' + color.id + '"><span class="swatch-dot" style="background:' + style.fill + ";border-color:" + style.border + '"></span>' + esc(color.label) + "</button>";
+      }).join("") + "</div>";
+      if (state.drawColor === "other") {
+        extra += '<input id="draw-color-other" type="text" maxlength="40" placeholder="Color name" autocomplete="off" value="' + esc(state.drawColorOther) + '" style="margin-top:8px">';
+      }
+    } else if (!state.selection && state.drawTool === "cable") {
+      extra = '<div class="choice-row"><button type="button" class="mini" aria-pressed="' + (state.drawConductors === 2) + '" data-action="draw-conductors" data-n="2">2-wire</button><button type="button" class="mini" aria-pressed="' + (state.drawConductors === 3) + '" data-action="draw-conductors" data-n="3">3-wire</button></div>';
+    }
+    let sheet = "";
+    if (selectedNode) {
+      const box = findBox(selectedNode.boxId);
+      sheet = '<div class="draw-sheet"><label class="field-label" for="draw-label">Name</label><input id="draw-label" type="text" maxlength="80" autocomplete="off" value="' + esc(box ? box.name : "") + '">' +
+        '<div class="stack"><button type="button" class="mini caution" aria-pressed="' + !!(box && box.unsure) + '" data-action="draw-unsure">Not sure</button>' +
+        '<a class="btn secondary" href="#/box/' + encodeURIComponent(selectedNode.boxId) + '">Open box</a>' +
+        '<button type="button" class="btn danger" data-action="draw-delete">Remove this box</button>' +
+        '<button type="button" class="btn primary" data-action="draw-done">Done</button></div></div>';
+    } else if (selectedStroke) {
+      const wireColors = selectedStroke.kind === "wire"
+        ? '<div class="choice-row">' + L.DRAW_COLORS.map((color) => {
+          const style = L.colorStyle({ color: color.id });
+          return '<button type="button" class="mini" aria-pressed="' + (selectedStroke.color === color.id) + '" data-action="draw-recolor" data-color="' + color.id + '"><span class="swatch-dot" style="background:' + style.fill + '"></span>' + esc(color.label) + "</button>";
+        }).join("") + "</div>"
+        : "";
+      sheet = '<div class="draw-sheet"><h2>' + (selectedStroke.kind === "cable" ? (selectedStroke.conductors === 3 ? "3-wire cable" : "2-wire cable") : "Wire") + "</h2>" +
+        '<label class="field-label" for="draw-label">Label</label><input id="draw-label" type="text" maxlength="80" autocomplete="off" placeholder="Optional" value="' + esc(selectedStroke.label || "") + '">' +
+        wireColors +
+        '<div class="stack"><button type="button" class="mini caution" aria-pressed="' + !!selectedStroke.unsure + '" data-action="draw-unsure">Not sure</button>' +
+        '<button type="button" class="btn danger" data-action="draw-delete">Remove this wire</button>' +
+        '<button type="button" class="btn primary" data-action="draw-done">Done</button></div></div>';
+    }
+    const dock = sheet || ('<div class="draw-dock"><div class="tool-row">' + tools + "</div>" + extra + "</div>");
+    return '<div class="draw-top"><button type="button" class="back" data-action="back">Back</button><strong>' + esc(diagram.name || "Drawing") + "</strong>" +
+      '<button type="button" class="text-btn" data-action="draw-undo"' + (drawHist.undo.length ? "" : " disabled") + ">Undo</button>" +
+      '<button type="button" class="text-btn" data-action="draw-redo"' + (drawHist.redo.length ? "" : " disabled") + ">Redo</button></div>" +
+      '<p class="draw-hint">' + esc(drawHint()) + "</p>" +
+      '<div class="draw-stage"><canvas id="draw-canvas" aria-label="Drawing of ' + esc(diagram.name || "your boxes") + '"></canvas>' +
+      (nodes.length || state.drawTool === "box" ? "" : '<p class="draw-empty">Tap Add box, then tap the page.</p>') +
+      "</div>" + dock;
+  }
+
+  function onDrawInput(el) {
+    if (el.id === "draw-color-other") {
+      state.drawColorOther = el.value.slice(0, 40);
+      return;
+    }
+    if (!state.labelUndo) {
+      pushUndo();
+      state.labelUndo = true;
+    }
+    const before = drawHist.undo[drawHist.undo.length - 1];
+    if (state.selection && state.selection.type === "node") L.renameDrawnNode(state.data, state.selection.id, el.value);
+    if (state.selection && state.selection.type === "stroke") L.renameDrawnStroke(state.data, state.selection.id, el.value);
+    if (before) syncText(before, textSnapshot());
+    rememberText();
+    const title = document.querySelector(".draw-top strong");
+    if (state.selection && state.selection.type === "node" && title) {
+      const node = (state.data.nodes || []).find((item) => item.id === state.selection.id);
+      const box = node && findBox(node.boxId);
+      if (box && findDiagram(state.route.diagramId) && node.diagramId === state.route.diagramId) {
+        /* keep the drawing title */
+      }
+    }
+    if (drawHandle) drawHandle.redraw();
+  }
+
+  function onDrawAction(action, el) {
+    if (action === "draw-tool") {
+      state.drawTool = el.dataset.tool || "move";
+      state.selection = null;
+      render();
+      return;
+    }
+    if (action === "draw-shape") {
+      state.drawShape = el.dataset.shape;
+      state.drawTool = "box";
+      render();
+      return;
+    }
+    if (action === "draw-color") {
+      state.drawColor = el.dataset.color;
+      state.drawTool = "wire";
+      render();
+      return;
+    }
+    if (action === "draw-conductors") {
+      state.drawConductors = Number(el.dataset.n) === 3 ? 3 : 2;
+      state.drawTool = "cable";
+      render();
+      return;
+    }
+    if (action === "draw-undo") { undoDraw(); return; }
+    if (action === "draw-redo") { redoDraw(); return; }
+    if (action === "draw-done") {
+      state.selection = null;
+      state.labelUndo = false;
+      render();
+      return;
+    }
+    if (action === "draw-new") {
+      const diagram = L.blankDiagram("Drawing " + ((state.data.diagrams || []).length + 1));
+      state.data.diagrams = state.data.diagrams || [];
+      state.data.diagrams.push(diagram);
+      queue("diagrams", "put", diagram);
+      rememberText();
+      state.drawTool = "box";
+      go("#/draw/" + encodeURIComponent(diagram.id));
+      return;
+    }
+    if (action === "draw-example") {
+      const existing = (state.data.diagrams || []).find((diagram) => diagram.example);
+      if (existing) {
+        go("#/draw/" + encodeURIComponent(existing.id));
+        return;
+      }
+      const built = L.garageExample();
+      commitDrawing((data) => {
+        if (!data.diagrams) data.diagrams = [];
+        if (!data.nodes) data.nodes = [];
+        if (!data.strokes) data.strokes = [];
+        built.diagrams.forEach((item) => data.diagrams.push(item));
+        built.boxes.forEach((item) => data.boxes.push(item));
+        built.nodes.forEach((item) => data.nodes.push(item));
+        built.wires.forEach((item) => data.wires.push(item));
+        built.strokes.forEach((item) => data.strokes.push(item));
+      });
+      go("#/draw/" + encodeURIComponent(built.diagrams[0].id));
+      return;
+    }
+    if (action === "draw-unsure") {
+      if (!state.selection) return;
+      commitDrawing((data) => {
+        if (state.selection.type === "node") {
+          const node = data.nodes.find((item) => item.id === state.selection.id);
+          const box = node && data.boxes.find((item) => item.id === node.boxId);
+          L.setNodeUnsure(data, state.selection.id, !(box && box.unsure));
+        } else {
+          const stroke = data.strokes.find((item) => item.id === state.selection.id);
+          L.setStrokeUnsure(data, state.selection.id, !(stroke && stroke.unsure));
+        }
+      });
+      render();
+      return;
+    }
+    if (action === "draw-recolor") {
+      if (!state.selection || state.selection.type !== "stroke") return;
+      commitDrawing((data) => L.recolorDrawnStroke(data, state.selection.id, el.dataset.color, state.drawColorOther));
+      render();
+      return;
+    }
+    if (action === "draw-delete") {
+      if (!state.selection) return;
+      const selection = state.selection;
+      const node = selection.type === "node";
+      state.confirm = {
+        title: node ? "Remove this box?" : "Remove this wire?",
+        body: node ? "The box and the wires drawn to it come off this phone." : "The wire comes off both boxes.",
+        confirmLabel: node ? "Yes, remove it" : "Remove wire",
+        onYes: function () {
+          let photoIds = [];
+          commitDrawing((data) => {
+            const result = node ? L.deleteDrawnNode(data, selection.id) : L.deleteDrawnStroke(data, selection.id);
+            if (result && result.boxResult && result.boxResult.removedPhotoIds) photoIds = result.boxResult.removedPhotoIds;
+          });
+          photoIds.forEach((id) => {
+            const url = state.urls.get(id);
+            if (url) URL.revokeObjectURL(url);
+            state.urls.delete(id);
+            queue("photos", "del", id);
+          });
+          state.selection = null;
+          render();
+        },
+      };
+      render();
+    }
+  }
+
   function init() {
     document.addEventListener("click", onClick);
     document.addEventListener("input", onInput);
@@ -1622,6 +2108,9 @@
         boxes: loaded.boxes,
         wires: loaded.wires,
         groups: loaded.groups,
+        diagrams: loaded.diagrams || [],
+        nodes: loaded.nodes || [],
+        strokes: loaded.strokes || [],
         photos: loaded.photos,
       };
       refreshUrls();
