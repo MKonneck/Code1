@@ -6,12 +6,35 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   const BOX_TYPES = [
     { id: "switch", label: "Switch" },
+    { id: "3way", label: "3-way" },
+    { id: "4way", label: "4-way" },
     { id: "outlet", label: "Outlet" },
     { id: "light", label: "Light" },
     { id: "junction", label: "Junction" },
     { id: "panel", label: "Panel" },
     { id: "other", label: "Other" },
   ];
+
+  const DRAW_SHAPES = [
+    { id: "switch", label: "Switch", boxType: "switch" },
+    { id: "3way", label: "3-way", boxType: "3way" },
+    { id: "4way", label: "4-way", boxType: "4way" },
+    { id: "outlet", label: "Outlet", boxType: "outlet" },
+    { id: "junction", label: "Junction", boxType: "junction" },
+    { id: "panel", label: "Power", boxType: "panel" },
+  ];
+
+  const DRAW_COLORS = [
+    { id: "black", label: "Black" },
+    { id: "white", label: "White" },
+    { id: "red", label: "Red" },
+    { id: "bare", label: "Bare" },
+    { id: "green", label: "Green" },
+    { id: "other", label: "Other" },
+  ];
+
+  const NODE_W = 148;
+  const NODE_H = 92;
 
   const COLORS = [
     { id: "black", label: "Black", fill: "#222222", ink: "#ffffff", border: "#222222" },
@@ -297,6 +320,7 @@
         short: short,
       }));
     }
+    if (wire.unsure) add("unsure", "field-unsure", "you marked this not sure", "Not sure");
     if (wire.color === "unknown") add("color", "field-color", "what color is it?", "Color?");
     if (wire.attachedTo === "unknown") add("attached", "field-attached", "what is it attached to?", "Attached to?");
     if (wire.attachedTo === "nut" && !wire.groupId) add("nut", "field-attached", "which wire nut?", "Which nut?");
@@ -320,16 +344,31 @@
   }
 
   function boxIssues(box) {
-    if (!box || box.breakerStatus !== "unknown") return [];
-    return [issue({
-      id: box.id + ":breaker",
-      kind: "breaker",
-      field: "breaker",
-      focus: "field-breaker",
-      boxId: box.id,
-      text: "Which breaker controls it?",
-      short: "Breaker?",
-    })];
+    if (!box) return [];
+    const list = [];
+    if (box.breakerStatus === "unknown") {
+      list.push(issue({
+        id: box.id + ":breaker",
+        kind: "breaker",
+        field: "breaker",
+        focus: "field-breaker",
+        boxId: box.id,
+        text: "Which breaker controls it?",
+        short: "Breaker?",
+      }));
+    }
+    if (box.unsure) {
+      list.push(issue({
+        id: box.id + ":unsure",
+        kind: "box",
+        field: "unsure",
+        focus: "field-unsure",
+        boxId: box.id,
+        text: "Not sure about this box",
+        short: "Not sure",
+      }));
+    }
+    return list;
   }
 
   function allIssues(data) {
@@ -530,7 +569,25 @@
     data.groups = data.groups.filter((group) => group.boxId !== boxId);
     if (data.photos) data.photos = data.photos.filter((photo) => photo.boxId !== boxId);
     data.boxes = data.boxes.filter((item) => item.id !== boxId);
-    return { ok: true, removedWireIds, removedGroupIds, removedPhotoIds, touched };
+    const removedNodeIds = [];
+    const removedStrokeIds = [];
+    if (Array.isArray(data.nodes)) {
+      const gone = new Set();
+      data.nodes.forEach((node) => {
+        if (node.boxId !== boxId) return;
+        gone.add(node.id);
+        removedNodeIds.push(node.id);
+      });
+      data.nodes = data.nodes.filter((node) => node.boxId !== boxId);
+      if (Array.isArray(data.strokes)) {
+        data.strokes = data.strokes.filter((stroke) => {
+          const drop = gone.has(stroke.fromNodeId) || gone.has(stroke.toNodeId);
+          if (drop) removedStrokeIds.push(stroke.id);
+          return !drop;
+        });
+      }
+    }
+    return { ok: true, removedWireIds, removedGroupIds, removedPhotoIds, removedNodeIds, removedStrokeIds, touched };
   }
 
   function deleteGroup(data, groupId) {
@@ -596,6 +653,7 @@
         breaker: breaker,
         breakerStatus: breakerStatus,
         notes: clip(rawBox.notes, LIMITS.notes),
+        unsure: rawBox.unsure === true,
         createdAt: asTime(rawBox.createdAt),
         updatedAt: asTime(rawBox.updatedAt),
       };
@@ -641,6 +699,7 @@
         tested: tested,
         notes: clip(rawWire.notes, LIMITS.notes),
         groupId: groupId && groupIds.has(groupId) ? groupId : null,
+        unsure: rawWire.unsure === true,
         createdAt: asTime(rawWire.createdAt),
         updatedAt: asTime(rawWire.updatedAt),
       };
@@ -667,7 +726,83 @@
       wire.goesTo = "box";
       wire.goesToBoxId = other.boxId;
     });
-    return { boxes: boxes, wires: wires, groups: groups };
+    const diagrams = takeUnique(source.diagrams, (rawDiagram) => cleanDiagram(rawDiagram));
+    const diagramIds = new Set(diagrams.map((diagram) => diagram.id));
+    const shapeIds = new Set(DRAW_SHAPES.map((shape) => shape.id));
+    let nodes = takeUnique(source.nodes, (rawNode) => {
+      if (!rawNode || typeof rawNode !== "object") return null;
+      const id = cleanId(rawNode.id);
+      const diagramId = cleanId(rawNode.diagramId);
+      const boxId = cleanId(rawNode.boxId);
+      const kind = shapeIds.has(rawNode.kind) ? rawNode.kind : "";
+      const x = Number(rawNode.x);
+      const y = Number(rawNode.y);
+      if (!id || !diagramId || !boxId || !kind || !diagramIds.has(diagramId) || !boxIds.has(boxId)) return null;
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+      return {
+        id: id,
+        diagramId: diagramId,
+        boxId: boxId,
+        kind: kind,
+        mark: clip(rawNode.mark, 3),
+        x: x,
+        y: y,
+        createdAt: asTime(rawNode.createdAt),
+        updatedAt: asTime(rawNode.updatedAt),
+      };
+    });
+    const nodeIds = new Set(nodes.map((node) => node.id));
+    const wireIds = new Set(wires.map((wire) => wire.id));
+    let strokes = takeUnique(source.strokes, (rawStroke) => {
+      if (!rawStroke || typeof rawStroke !== "object") return null;
+      const id = cleanId(rawStroke.id);
+      const diagramId = cleanId(rawStroke.diagramId);
+      const fromNodeId = cleanId(rawStroke.fromNodeId);
+      const toNodeId = cleanId(rawStroke.toNodeId);
+      if (!id || !diagramId || !fromNodeId || !toNodeId || fromNodeId === toNodeId) return null;
+      if (!diagramIds.has(diagramId) || !nodeIds.has(fromNodeId) || !nodeIds.has(toNodeId)) return null;
+      const kind = rawStroke.kind === "cable" ? "cable" : "wire";
+      const conductors = kind === "cable" ? (Number(rawStroke.conductors) === 3 ? 3 : 2) : 1;
+      const color = ALLOWED.color.has(rawStroke.color) ? rawStroke.color : "black";
+      const keptWires = [];
+      (Array.isArray(rawStroke.wireIds) ? rawStroke.wireIds : []).forEach((wireId) => {
+        const clean = cleanId(wireId);
+        if (clean && wireIds.has(clean)) keptWires.push(clean);
+      });
+      return {
+        id: id,
+        diagramId: diagramId,
+        fromNodeId: fromNodeId,
+        toNodeId: toNodeId,
+        kind: kind,
+        conductors: conductors,
+        color: color,
+        colorOther: clip(rawStroke.colorOther, LIMITS.colorOther),
+        label: clip(rawStroke.label, LIMITS.cable),
+        unsure: rawStroke.unsure === true,
+        wireIds: keptWires,
+        createdAt: asTime(rawStroke.createdAt),
+        updatedAt: asTime(rawStroke.updatedAt),
+      };
+    });
+    return { boxes: boxes, wires: wires, groups: groups, diagrams: diagrams, nodes: nodes, strokes: strokes };
+  }
+
+  function cleanDiagram(rawDiagram) {
+    if (!rawDiagram || typeof rawDiagram !== "object") return null;
+    const id = cleanId(rawDiagram.id);
+    if (!id) return null;
+    const scale = Number(rawDiagram.viewScale);
+    return {
+      id: id,
+      name: clip(rawDiagram.name, LIMITS.name) || "Drawing",
+      example: rawDiagram.example === true,
+      viewX: Number.isFinite(Number(rawDiagram.viewX)) ? Number(rawDiagram.viewX) : 24,
+      viewY: Number.isFinite(Number(rawDiagram.viewY)) ? Number(rawDiagram.viewY) : 24,
+      viewScale: Number.isFinite(scale) ? scale : 1,
+      createdAt: asTime(rawDiagram.createdAt),
+      updatedAt: asTime(rawDiagram.updatedAt),
+    };
   }
 
   function importBackup(raw) {
@@ -677,7 +812,7 @@
     if (raw.app !== "wire-tracker") {
       return { ok: false, error: "That file doesn't look like a Wire Tracker backup." };
     }
-    if (raw.version !== 1) {
+    if (raw.version !== 1 && raw.version !== 2) {
       return { ok: false, error: "This backup is from a different version of Wire Tracker." };
     }
     const cleaned = cleanState(raw);
@@ -715,6 +850,345 @@
       photos: photos,
       skippedPhotos: skippedPhotos,
     };
+  }
+
+  function ensureDraw(data) {
+    if (!Array.isArray(data.diagrams)) data.diagrams = [];
+    if (!Array.isArray(data.nodes)) data.nodes = [];
+    if (!Array.isArray(data.strokes)) data.strokes = [];
+    if (!Array.isArray(data.boxes)) data.boxes = [];
+    if (!Array.isArray(data.wires)) data.wires = [];
+    if (!Array.isArray(data.groups)) data.groups = [];
+  }
+
+  function blankDiagram(name) {
+    const now = Date.now();
+    return {
+      id: uid(),
+      name: name || "Drawing",
+      example: false,
+      viewX: 28,
+      viewY: 28,
+      viewScale: 1,
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+
+  function drawShape(kind) {
+    return DRAW_SHAPES.find((shape) => shape.id === kind) || DRAW_SHAPES[0];
+  }
+
+  function addDrawnBox(data, spec) {
+    ensureDraw(data);
+    const diagram = data.diagrams.find((item) => item.id === spec.diagramId);
+    if (!diagram) return { ok: false, error: "Open a drawing first." };
+    const shape = drawShape(spec.kind);
+    const box = blankBox();
+    box.name = clip(spec.name || "", LIMITS.name) || shape.label;
+    box.type = shape.boxType;
+    box.room = clip(spec.room || "", LIMITS.room);
+    box.notes = clip(spec.notes || "", LIMITS.notes);
+    box.unsure = spec.unsure === true;
+    const node = {
+      id: uid(),
+      diagramId: diagram.id,
+      boxId: box.id,
+      kind: shape.id,
+      mark: clip(spec.mark || "", 3),
+      x: Number.isFinite(Number(spec.x)) ? Number(spec.x) : 36,
+      y: Number.isFinite(Number(spec.y)) ? Number(spec.y) : 36,
+      createdAt: box.createdAt,
+      updatedAt: box.updatedAt,
+    };
+    data.boxes.push(box);
+    data.nodes.push(node);
+    diagram.updatedAt = box.updatedAt;
+    return { ok: true, box: box, node: node };
+  }
+
+  function cableColorList(conductors) {
+    return conductors === 3 ? ["black", "red", "white"] : ["black", "white"];
+  }
+
+  function addDrawnStroke(data, spec) {
+    ensureDraw(data);
+    const from = data.nodes.find((node) => node.id === spec.fromNodeId);
+    const to = data.nodes.find((node) => node.id === spec.toNodeId);
+    if (!from || !to || from.id === to.id) return { ok: false, error: "Drag onto another box." };
+    if (from.diagramId !== to.diagramId) return { ok: false, error: "Those boxes are on different drawings." };
+    const fromBox = data.boxes.find((box) => box.id === from.boxId);
+    const toBox = data.boxes.find((box) => box.id === to.boxId);
+    if (!fromBox || !toBox) return { ok: false, error: "That box is missing." };
+    const kind = spec.kind === "cable" ? "cable" : "wire";
+    const conductors = kind === "cable" ? (Number(spec.conductors) === 3 ? 3 : 2) : 1;
+    const chosen = ALLOWED.color.has(spec.color) ? spec.color : "black";
+    const colors = kind === "cable" ? cableColorList(conductors) : [chosen];
+    const label = clip(spec.label || "", LIMITS.cable);
+    const cableName = label || (boxTitle(fromBox) + " to " + boxTitle(toBox));
+    const now = Date.now();
+    const wireIds = [];
+    colors.forEach((color) => {
+      const left = blankWire(from.boxId);
+      const right = blankWire(to.boxId);
+      left.color = color;
+      right.color = color;
+      if (color === "other") {
+        left.colorOther = clip(spec.colorOther || "", LIMITS.colorOther);
+        right.colorOther = left.colorOther;
+      }
+      left.cable = cableName;
+      right.cable = cableName;
+      left.unsure = spec.unsure === true;
+      right.unsure = spec.unsure === true;
+      data.wires.push(left, right);
+      const linked = linkWires(data, left.id, right.id);
+      if (!linked.ok) return;
+      wireIds.push(left.id, right.id);
+    });
+    const stroke = {
+      id: uid(),
+      diagramId: from.diagramId,
+      fromNodeId: from.id,
+      toNodeId: to.id,
+      kind: kind,
+      conductors: conductors,
+      color: colors[0],
+      colorOther: clip(spec.colorOther || "", LIMITS.colorOther),
+      label: label,
+      unsure: spec.unsure === true,
+      wireIds: wireIds,
+      createdAt: now,
+      updatedAt: now,
+    };
+    data.strokes.push(stroke);
+    fromBox.updatedAt = now;
+    toBox.updatedAt = now;
+    return { ok: true, stroke: stroke };
+  }
+
+  function eachStrokeWire(data, stroke, visit) {
+    (stroke.wireIds || []).forEach((id) => {
+      const wire = findWire(data, id);
+      if (wire) visit(wire);
+    });
+  }
+
+  function setStrokeUnsure(data, strokeId, unsure) {
+    ensureDraw(data);
+    const stroke = data.strokes.find((item) => item.id === strokeId);
+    if (!stroke) return { ok: false };
+    const flag = unsure === true;
+    const now = Date.now();
+    stroke.unsure = flag;
+    stroke.updatedAt = now;
+    eachStrokeWire(data, stroke, (wire) => {
+      wire.unsure = flag;
+      wire.updatedAt = now;
+    });
+    return { ok: true, stroke: stroke };
+  }
+
+  function setNodeUnsure(data, nodeId, unsure) {
+    ensureDraw(data);
+    const node = data.nodes.find((item) => item.id === nodeId);
+    if (!node) return { ok: false };
+    const box = data.boxes.find((item) => item.id === node.boxId);
+    if (!box) return { ok: false };
+    box.unsure = unsure === true;
+    box.updatedAt = Date.now();
+    node.updatedAt = box.updatedAt;
+    return { ok: true, box: box, node: node };
+  }
+
+  function renameDrawnNode(data, nodeId, name) {
+    ensureDraw(data);
+    const node = data.nodes.find((item) => item.id === nodeId);
+    const box = node && data.boxes.find((item) => item.id === node.boxId);
+    if (!box) return { ok: false };
+    box.name = clip(name, LIMITS.name);
+    box.updatedAt = Date.now();
+    node.updatedAt = box.updatedAt;
+    return { ok: true, box: box };
+  }
+
+  function renameDrawnStroke(data, strokeId, label) {
+    ensureDraw(data);
+    const stroke = data.strokes.find((item) => item.id === strokeId);
+    if (!stroke) return { ok: false };
+    stroke.label = clip(label, LIMITS.cable);
+    const from = data.nodes.find((node) => node.id === stroke.fromNodeId);
+    const to = data.nodes.find((node) => node.id === stroke.toNodeId);
+    const fromBox = from && data.boxes.find((box) => box.id === from.boxId);
+    const toBox = to && data.boxes.find((box) => box.id === to.boxId);
+    const cableName = stroke.label || ((fromBox ? boxTitle(fromBox) : "Box") + " to " + (toBox ? boxTitle(toBox) : "box"));
+    const now = Date.now();
+    stroke.updatedAt = now;
+    eachStrokeWire(data, stroke, (wire) => {
+      wire.cable = cableName;
+      wire.updatedAt = now;
+    });
+    return { ok: true, stroke: stroke };
+  }
+
+  function recolorDrawnStroke(data, strokeId, color, colorOther) {
+    ensureDraw(data);
+    const stroke = data.strokes.find((item) => item.id === strokeId);
+    if (!stroke || stroke.kind === "cable") return { ok: false };
+    if (!ALLOWED.color.has(color)) return { ok: false };
+    const now = Date.now();
+    stroke.color = color;
+    stroke.colorOther = clip(colorOther || "", LIMITS.colorOther);
+    stroke.updatedAt = now;
+    eachStrokeWire(data, stroke, (wire) => {
+      wire.color = color;
+      wire.colorOther = stroke.colorOther;
+      wire.updatedAt = now;
+    });
+    return { ok: true, stroke: stroke };
+  }
+
+  function deleteDrawnStroke(data, strokeId) {
+    ensureDraw(data);
+    const stroke = data.strokes.find((item) => item.id === strokeId);
+    if (!stroke) return { ok: false };
+    const removedWireIds = [];
+    stroke.wireIds.slice().forEach((id) => {
+      if (!findWire(data, id)) return;
+      deleteWire(data, id);
+      removedWireIds.push(id);
+    });
+    data.strokes = data.strokes.filter((item) => item.id !== strokeId);
+    return { ok: true, removedWireIds: removedWireIds };
+  }
+
+  function deleteDrawnNode(data, nodeId) {
+    ensureDraw(data);
+    const node = data.nodes.find((item) => item.id === nodeId);
+    if (!node) return { ok: false };
+    const strokeIds = data.strokes.filter((stroke) => stroke.fromNodeId === nodeId || stroke.toNodeId === nodeId).map((stroke) => stroke.id);
+    const removedWireIds = [];
+    strokeIds.forEach((id) => {
+      const result = deleteDrawnStroke(data, id);
+      if (result && result.removedWireIds) removedWireIds.push.apply(removedWireIds, result.removedWireIds);
+    });
+    const boxResult = deleteBox(data, node.boxId);
+    return { ok: true, removedWireIds: removedWireIds, removedStrokeIds: strokeIds, boxResult: boxResult };
+  }
+
+  function moveDrawnNode(data, nodeId, x, y) {
+    ensureDraw(data);
+    const node = data.nodes.find((item) => item.id === nodeId);
+    if (!node) return { ok: false };
+    node.x = Number(x) || 0;
+    node.y = Number(y) || 0;
+    node.updatedAt = Date.now();
+    return { ok: true, node: node };
+  }
+
+  function nodeCenter(node) {
+    return { x: node.x + NODE_W / 2, y: node.y + NODE_H / 2 };
+  }
+
+  function distToSegment(px, py, ax, ay, bx, by) {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const len2 = dx * dx + dy * dy || 1;
+    let t = ((px - ax) * dx + (py - ay) * dy) / len2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+  }
+
+  function hitDrawing(nodes, strokes, x, y, slop) {
+    const list = nodes || [];
+    const pad = Math.min(12, slop * 0.25);
+    for (let i = list.length - 1; i >= 0; i--) {
+      const node = list[i];
+      if (x >= node.x - pad && y >= node.y - pad && x <= node.x + NODE_W + pad && y <= node.y + NODE_H + pad) {
+        return { type: "node", id: node.id };
+      }
+    }
+    let best = null;
+    let bestD = slop;
+    (strokes || []).forEach((stroke) => {
+      const from = list.find((node) => node.id === stroke.fromNodeId);
+      const to = list.find((node) => node.id === stroke.toNodeId);
+      if (!from || !to) return;
+      const a = nodeCenter(from);
+      const b = nodeCenter(to);
+      const dist = distToSegment(x, y, a.x, a.y, b.x, b.y);
+      if (dist <= bestD) {
+        bestD = dist;
+        best = stroke;
+      }
+    });
+    return best ? { type: "stroke", id: best.id } : null;
+  }
+
+  function fitView(nodes, width, height) {
+    const list = nodes || [];
+    if (!list.length || !(width > 0) || !(height > 0)) return { x: 28, y: 28, scale: 1 };
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    list.forEach((node) => {
+      minX = Math.min(minX, node.x);
+      minY = Math.min(minY, node.y);
+      maxX = Math.max(maxX, node.x + NODE_W);
+      maxY = Math.max(maxY, node.y + NODE_H);
+    });
+    const pad = 28;
+    const boundsW = Math.max(1, maxX - minX);
+    const boundsH = Math.max(1, maxY - minY);
+    const scale = Math.max(0.45, Math.min(1.2, Math.min((width - pad * 2) / boundsW, (height - pad * 2) / boundsH)));
+    return {
+      x: (width - boundsW * scale) / 2 - minX * scale,
+      y: (height - boundsH * scale) / 2 - minY * scale,
+      scale: scale,
+    };
+  }
+
+  function garageExample() {
+    const now = Date.now();
+    const data = { boxes: [], wires: [], groups: [], diagrams: [], nodes: [], strokes: [] };
+    const diagram = blankDiagram("Garage");
+    diagram.example = true;
+    diagram.viewScale = 0;
+    diagram.createdAt = now;
+    diagram.updatedAt = now;
+    data.diagrams.push(diagram);
+    const spots = [
+      { mark: "4", kind: "outlet", name: "Lights", x: 24, y: 24 },
+      { mark: "1", kind: "3way", name: "South", x: 250, y: 24 },
+      { mark: "5", kind: "outlet", name: "Junction", x: 136, y: 190 },
+      { mark: "6", kind: "junction", name: "Attic power", x: 24, y: 370, notes: "Power comes in on the black and the red." },
+      { mark: "2", kind: "4way", name: "4-way", x: 250, y: 360 },
+      { mark: "3", kind: "3way", name: "North", x: 250, y: 540 },
+    ];
+    const byMark = {};
+    spots.forEach((spot) => {
+      const added = addDrawnBox(data, {
+        diagramId: diagram.id,
+        kind: spot.kind,
+        name: spot.name,
+        mark: spot.mark,
+        x: spot.x,
+        y: spot.y,
+        room: "Garage",
+        notes: spot.notes || "",
+      });
+      byMark[spot.mark] = added.node;
+    });
+    [["6", "3", 3], ["6", "5", 3], ["6", "2", 2], ["5", "1", 3], ["5", "4", 2], ["5", "2", 2]].forEach((row) => {
+      addDrawnStroke(data, {
+        fromNodeId: byMark[row[0]].id,
+        toNodeId: byMark[row[1]].id,
+        kind: "cable",
+        conductors: row[2],
+      });
+    });
+    return data;
   }
 
   function advancePersistedStamp(batchStamp, storedStamp) {
@@ -922,6 +1396,10 @@
 
   return {
     BOX_TYPES: BOX_TYPES,
+    DRAW_SHAPES: DRAW_SHAPES,
+    DRAW_COLORS: DRAW_COLORS,
+    NODE_W: NODE_W,
+    NODE_H: NODE_H,
     COLORS: COLORS,
     ATTACHMENTS: ATTACHMENTS,
     DESTINATIONS: DESTINATIONS,
@@ -960,6 +1438,22 @@
     cleanState: cleanState,
     importBackup: importBackup,
     advancePersistedStamp: advancePersistedStamp,
+    blankDiagram: blankDiagram,
+    addDrawnBox: addDrawnBox,
+    addDrawnStroke: addDrawnStroke,
+    setStrokeUnsure: setStrokeUnsure,
+    setNodeUnsure: setNodeUnsure,
+    renameDrawnNode: renameDrawnNode,
+    renameDrawnStroke: renameDrawnStroke,
+    recolorDrawnStroke: recolorDrawnStroke,
+    deleteDrawnStroke: deleteDrawnStroke,
+    deleteDrawnNode: deleteDrawnNode,
+    moveDrawnNode: moveDrawnNode,
+    hitDrawing: hitDrawing,
+    fitView: fitView,
+    nodeCenter: nodeCenter,
+    cableColorList: cableColorList,
+    garageExample: garageExample,
     buildDiagram: buildDiagram,
   };
 });

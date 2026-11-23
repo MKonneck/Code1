@@ -1,10 +1,11 @@
-const CACHE = "wire-tracker-v1";
+const CACHE = "wire-tracker-v2";
 const SHELL = [
   "./",
   "./index.html",
   "./styles.css",
   "./logic.js",
   "./db.js",
+  "./draw.js",
   "./app.js",
   "./manifest.webmanifest",
   "./favicon.svg",
