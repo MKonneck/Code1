@@ -108,8 +108,13 @@
     const ops = [...pending.values()];
     pending.clear();
     if (!ops.length) return Promise.resolve();
+    const batchStamp = state.stamp;
     return DB.apply(ops).then(() => {
-      try { localStorage.setItem(STAMP_KEY, String(state.stamp)); } catch (err) { /* ignore */ }
+      try {
+        const stored = Number(localStorage.getItem(STAMP_KEY) || 0);
+        const next = L.advancePersistedStamp(batchStamp, stored);
+        if (next !== stored) localStorage.setItem(STAMP_KEY, String(next));
+      } catch (err) { /* ignore */ }
     }).catch((err) => {
       console.error(err);
       toast("Couldn't save just now. Keep this page open and try again.");

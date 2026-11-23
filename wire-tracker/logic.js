@@ -717,6 +717,12 @@
     };
   }
 
+  function advancePersistedStamp(batchStamp, storedStamp) {
+    const batch = Number(batchStamp) || 0;
+    const stored = Number(storedStamp) || 0;
+    return batch > stored ? batch : stored;
+  }
+
   function buildDiagram(data, boxId) {
     const wires = (data.wires || []).filter((wire) => wire.boxId === boxId && wireHasContent(wire));
     const width = 400;
@@ -953,6 +959,7 @@
     setWireGroup: setWireGroup,
     cleanState: cleanState,
     importBackup: importBackup,
+    advancePersistedStamp: advancePersistedStamp,
     buildDiagram: buildDiagram,
   };
 });

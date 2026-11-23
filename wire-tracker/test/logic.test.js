@@ -169,6 +169,12 @@ test("tapping the same choice again clears it", () => {
   assert.equal(wire.tested, "");
 });
 
+test("a finished save stamps only its own batch", () => {
+  assert.equal(L.advancePersistedStamp(100, 0), 100);
+  assert.equal(L.advancePersistedStamp(100, 250), 250);
+  assert.equal(L.advancePersistedStamp(300, 250), 300);
+});
+
 test("escapeHtml neutralizes markup", () => {
   assert.equal(L.escapeHtml(`<b class="a">&"'</b>`), "&lt;b class=&quot;a&quot;&gt;&amp;&quot;&#39;&lt;/b&gt;");
 });
